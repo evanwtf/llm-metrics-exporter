@@ -15,8 +15,9 @@ uvx pre-commit run --all-files   # everything CI checks, locally
 ```
 
 Go only; no other toolchain is needed. `internal/version` is the one place the
-version is declared, and `docs/changelog.md` needs a section for it before a
-release tag.
+version is declared, and `docs/changelog.md` needs a section for it before
+publishing. Publishing is manual (`gh workflow run publish.yml -f tag=vX.Y.Z`);
+do not add an automatic trigger without the operator's say-so.
 
 ## This repo is public
 

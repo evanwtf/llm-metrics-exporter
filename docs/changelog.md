@@ -1,7 +1,7 @@
 # Changelog
 
-Each release's notes are its section here. The release workflow publishes
-the section and refuses a version without one.
+Each release's notes are its section here. The publish workflow uses the
+section as the notes and refuses a version without one.
 
 ## 0.1.0 (unreleased)
 
@@ -22,5 +22,10 @@ The first build: one exporter per host, one schema for every engine.
 - **Health.** A registered arm that cannot be read exports
   `llm_engine_up 0`, with its error count and last success time. An invalid
   registration exports `llm_registration_invalid`.
-- **Packaging.** A systemd user unit, a LaunchAgent, and a Prometheus Agent
-  configuration.
+- **Packaging.** A Dockerfile and `compose.yaml` for Linux hosts (host
+  networking, the registration directory mounted read-only, an optional
+  Prometheus Agent), a systemd user unit, a LaunchAgent, and a Prometheus
+  Agent configuration.
+- **Releases.** A manual publish workflow: one zip per platform (macOS and
+  Linux, arm64 and amd64) with the binary, gated on the version, an unused
+  tag and a changelog section.

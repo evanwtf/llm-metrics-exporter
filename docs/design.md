@@ -273,8 +273,12 @@ default directory is the same on both operating systems:
 set. `register` and `serve` use the same default, so they agree without
 configuration. `--registration-dir` overrides it on both.
 
-- **Linux:** a systemd unit with `User=` (`packaging/systemd/`).
-- **macOS:** a LaunchAgent for that user (`packaging/launchd/`).
+- **Linux:** `docker compose` (`compose.yaml`), with host networking and the
+  registration directory mounted read-only; or a systemd user unit
+  (`packaging/systemd/`). Launchers use the host binary to register.
+- **macOS:** a LaunchAgent for that user (`packaging/launchd/`), native. A
+  container on macOS runs in a VM and cannot reach the host's engines on
+  `127.0.0.1`.
 
 ## The benchmark contract
 

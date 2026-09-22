@@ -11,15 +11,21 @@ Phases follow `design.md`, *Rollout*. Each item says what "done" is.
 - [x] Collector: per-run adapter lifecycle, parallel collection under a
       timeout, loud health series.
 - [x] Adapters: vLLM, llama.cpp, SGLang (pass-through); ds4 (log).
-- [x] CI on the self-hosted runners; release on a `v*` tag, gated on the
-      version and the changelog; pre-commit with the public-repo guard.
+- [x] CI on the self-hosted runners, including building and running the
+      Docker image; pre-commit with the public-repo guard.
+- [x] A manual publish workflow (zips for darwin/linux × arm64/amd64), gated
+      on the version, an unused tag and the changelog.
+- [x] Dockerfile and `compose.yaml` for Linux hosts.
 - [x] End-to-end run against a live SGLang server.
 
 ## Phase 2: deploy on the Sparks
 
 - [ ] Central Prometheus: `--web.enable-remote-write-receiver`.
-- [ ] Tag `v0.1.0`; install the release binary and the systemd user unit on
-      both Sparks; enable linger.
+- [ ] Publish `v0.1.0` (`gh workflow run publish.yml -f tag=v0.1.0`); on both
+      Sparks, install the binary for launchers and run the exporter with
+      `docker compose up -d` (or the systemd user unit).
+- [ ] Decide whether publishing should trigger automatically (on a tag). It is
+      manual by decision, 2026-09-22.
 - [ ] A Prometheus Agent per Spark (`packaging/prometheus-agent/agent.yml`).
 - [ ] local-llm: launchers call `llm-metrics-exporter register` at start and
       `deregister` at stop, including the two-node recipes. Separate issue in

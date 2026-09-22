@@ -1,0 +1,81 @@
+name: publish
+
+# Manual only: Actions -> publish -> Run workflow, or
+#   gh workflow run publish.yml -f tag=v0.1.0
+# It publishes a GitHub release with one zip per platform, each holding the
+# binary, LICENSE and README.md. Nothing triggers it automatically.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, v + the version in internal/version (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: [self-hosted, Linux, X64]
+    env:
+      TAG: ${{ inputs.tag }}
+    steps:
+      # A shared self-hosted runner: keep Go's caches inside this run.
+      - name: scope Go caches to this run
+        run: |
+          echo "GOCACHE=$RUNNER_TEMP/go-build-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=$RUNNER_TEMP/go-mod-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: refuse a tag that disagrees with internal/version
+        run: go run ./scripts/release check "$TAG"
+      - name: refuse a tag that already exists
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "tag $TAG already exists; bump internal/version and docs/changelog.md" >&2
+            exit 1
+          fi
+      - name: refuse a version with no changelog section
+        run: go run ./scripts/release notes > "$RUNNER_TEMP/notes.md"
+      - run: go test ./...
+      - name: build and zip
+        run: |
+          version=${TAG#v}
+          rev=$(git rev-parse --short HEAD)
+          mkdir -p dist
+          for target in darwin/arm64 darwin/amd64 linux/arm64 linux/amd64; do
+            os=${target%/*} arch=${target#*/}
+            name="llm-metrics-exporter-$version-$os-$arch"
+            mkdir -p "build/$name"
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -trimpath \
+              -ldflags "-s -w -X github.com/evanwtf/llm-metrics-exporter/internal/version.Revision=$rev" \
+              -o "build/$name/llm-metrics-exporter" ./cmd/llm-metrics-exporter
+            go run ./scripts/release zip "dist/$name.zip" "$name" \
+              "build/$name/llm-metrics-exporter" LICENSE README.md
+          done
+          (cd dist && sha256sum *.zip > SHA256SUMS && cat SHA256SUMS)
+      - name: run the linux/amd64 binary from its zip
+        # Test what ships: unzip it and run it.
+        run: |
+          version=${TAG#v}
+          mkdir -p "$RUNNER_TEMP/unzip"
+          python3 -m zipfile -e "dist/llm-metrics-exporter-$version-linux-amd64.zip" "$RUNNER_TEMP/unzip" \
+            || unzip -q "dist/llm-metrics-exporter-$version-linux-amd64.zip" -d "$RUNNER_TEMP/unzip"
+          bin="$RUNNER_TEMP/unzip/llm-metrics-exporter-$version-linux-amd64/llm-metrics-exporter"
+          chmod +x "$bin"   # python's zipfile does not restore modes; unzip does
+          "$bin" --version | tee "$RUNNER_TEMP/version.txt"
+          grep -q "version=$version" "$RUNNER_TEMP/version.txt"
+      - name: publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" \
+            --notes-file "$RUNNER_TEMP/notes.md" dist/*.zip dist/SHA256SUMS
