@@ -1,0 +1,62 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: [self-hosted, Linux, X64]
+    env:
+      # A shared self-hosted runner: keep Go's caches inside this run, so a
+      # sibling job's files (possibly root-owned) cannot break this one.
+      GOCACHE: ${{ runner.temp }}/go-build-${{ github.run_id }}-${{ github.run_attempt }}
+      GOMODCACHE: ${{ runner.temp }}/go-mod-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: format, vet, public-repo guard
+        # Collect every failure, so one run reports all of them.
+        run: |
+          status=0
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "gofmt needed:"; echo "$unformatted"; status=1; fi
+          go vet ./... || status=$?
+          sh scripts/check-public.sh || status=$?
+          go mod tidy -diff || status=$?
+          exit "$status"
+      - run: go test ./...
+      - name: build every release target
+        run: |
+          for target in linux/amd64 linux/arm64 darwin/arm64 darwin/amd64; do
+            GOOS=${target%/*} GOARCH=${target#*/} CGO_ENABLED=0 \
+              go build -trimpath -o "dist/llm-metrics-exporter-${target%/*}-${target#*/}" ./cmd/llm-metrics-exporter
+          done
+      - name: run the linux/amd64 binary
+        # Building is not enough: run what ships.
+        run: |
+          out=$(dist/llm-metrics-exporter-linux-amd64 --version)
+          echo "$out"
+          echo "$out" | grep -q "version=$(sed -n 's/^const Version = "\(.*\)"/\1/p' internal/version/version.go)"
+
+  macos:
+    runs-on: [self-hosted, macOS, ARM64]
+    env:
+      GOCACHE: ${{ runner.temp }}/go-build-${{ github.run_id }}-${{ github.run_attempt }}
+      GOMODCACHE: ${{ runner.temp }}/go-mod-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      # The race detector needs cgo, which the macOS runner has.
+      - run: go test -race ./...
+      - run: go build -trimpath -o llm-metrics-exporter ./cmd/llm-metrics-exporter && ./llm-metrics-exporter --version

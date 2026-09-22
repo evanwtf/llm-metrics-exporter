@@ -1,0 +1,48 @@
+# Local mirror of CI. Install once after cloning: pre-commit install
+repos:
+  # The public-repo guard runs first. POSIX sh and grep only, so it works
+  # from a bare `git commit` with no Go toolchain on PATH.
+  - repo: local
+    hooks:
+      - id: check-public
+        name: no private hosts, addresses or home paths
+        entry: scripts/check-public.sh
+        language: script
+        types: [text]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  # The project's own Go toolchain: no mirror repo's rev to drift from.
+  - repo: local
+    hooks:
+      - id: gofmt
+        name: gofmt
+        entry: sh -c 'out=$(gofmt -l "$@"); [ -z "$out" ] || { echo "$out"; exit 1; }' --
+        language: system
+        types: [go]
+      - id: go-vet
+        name: go vet
+        # The whole module: vetting only staged files hides breakage in callers.
+        entry: go vet ./...
+        language: system
+        pass_filenames: false
+        types: [go]
+      - id: go-test
+        name: go test
+        entry: go test ./...
+        language: system
+        pass_filenames: false
+        types: [go]

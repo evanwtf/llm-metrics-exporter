@@ -1,0 +1,49 @@
+name: release
+
+# Cutting a release is `git tag -a vX.Y.Z && git push --tags`. The notes come
+# from docs/changelog.md, never from the tag message.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: [self-hosted, Linux, X64]
+    env:
+      GOCACHE: ${{ runner.temp }}/go-build-${{ github.run_id }}-${{ github.run_attempt }}
+      GOMODCACHE: ${{ runner.temp }}/go-mod-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: refuse a tag that disagrees with internal/version
+        run: go run ./scripts/release check "$GITHUB_REF_NAME"
+      - name: refuse a version with no changelog section
+        run: go run ./scripts/release notes > "$RUNNER_TEMP/notes.md"
+      - run: go test ./...
+      - name: build
+        run: |
+          rev=$(git rev-parse --short HEAD)
+          mkdir -p dist
+          for target in linux/amd64 linux/arm64 darwin/arm64 darwin/amd64; do
+            os=${target%/*} arch=${target#*/}
+            name="llm-metrics-exporter-${GITHUB_REF_NAME#v}-${os}-${arch}"
+            mkdir -p "build/$name"
+            GOOS=$os GOARCH=$arch CGO_ENABLED=0 go build -trimpath \
+              -ldflags "-s -w -X github.com/evanwtf/llm-metrics-exporter/internal/version.Revision=$rev" \
+              -o "build/$name/llm-metrics-exporter" ./cmd/llm-metrics-exporter
+            cp LICENSE README.md "build/$name/"
+            cp -R packaging "build/$name/"
+            tar -C build -czf "dist/$name.tar.gz" "$name"
+          done
+          "build/llm-metrics-exporter-${GITHUB_REF_NAME#v}-linux-amd64/llm-metrics-exporter" --version
+          (cd dist && sha256sum *.tar.gz > SHA256SUMS)
+      - name: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md" dist/*

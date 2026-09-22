@@ -215,8 +215,8 @@ func TestDefaultDir(t *testing.T) {
 		t.Errorf("got %s", got)
 	}
 	t.Setenv("XDG_STATE_HOME", "")
-	t.Setenv("HOME", "/home/u")
-	if got := DefaultDir(); got != "/home/u/.local/state/llm-metrics-exporter/registrations" {
+	t.Setenv("HOME", "/x/u")
+	if got := DefaultDir(); got != "/x/u/.local/state/llm-metrics-exporter/registrations" {
 		t.Errorf("got %s", got)
 	}
 }
