@@ -290,4 +290,3 @@ func escape(s string) string {
 	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`)
 	return r.Replace(s)
 }
-
