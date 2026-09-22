@@ -1,0 +1,509 @@
+ds4: warming mapped tensor pages: 73.57 GiB
+ds4: warmed tensor pages in 4.806s (checksum=626506950)
+ds4: trusted local Qwen artifacts; payload checksum scan skipped
+ds4: Qwen tensor directory bound: 1211 tensors (1211 graph inputs), 48 layers, Q4_K/Q4_K routed + BF16 embedding/control + Q8_0 GDN/QSA + Q8_0 shared/output
+ds4: Qwen fast pack accepted: id=cbadff6365a353a938aef98e469b831b version=3 profile=q4_k base_files=1 tensor_manifest=93e91b17c9ccf1bd...
+ds4: Qwen v3 q4_k MTP sidecar bound: 32 graph inputs, one QSA layer
+ds4: derived Q8_0 hyper-connection profile: 194 matrices, 0.63 GiB (from 1.18 GiB BF16) in 0.024s
+ds4: Metal device Apple M5 Max, 128.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 2.543 ms, residency requested in 590.120 ms, warmup 3.702 ms (mapped 77535.00 MiB from offset 0.00 MiB)
+ds4: Metal mapped 3 Qwen GGUF artifacts as 3 shared views
+ds4: Qwen prefill admission: cap=8192 required=3.68 GiB available=24.58 GiB recommended_working_set=112.00 GiB reason=complete fast path and 8K scratch admitted
+ds4: Qwen MTP state capture: depth=7 slots=6 BF16-GDN/FP32-PLE=359.86 MiB fallback=restore-replay-on-failure
+ds4: Qwen graph allocated: ctx=100000 work_cap=8192 QSA=BF16 microtile=512 PLE=SSD-pread/Q4_1-to-BF16-double-buffer GDN-control=BF16 GDN-state=BF16 GDN-qkvz=Q8-concat GDN-out=Q8-HC-fused MoE-down=Q4_0-expert-split MTP=Q4_K/Q8_0/BF16 verifier=block/max16
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=uncached suffix shorter than 8192
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=uncached suffix shorter than 8192
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=99.800 ms verifier=block
+ds4: Qwen MTP stages snapshot=2.004 ms draft=14.094 ms verify=55.498 ms capture=BF16-GDN/FP32-PLE restore-select=0.135 ms history=3.391 ms commit=3.530 ms path=direct-partial counts(full=0 partial=1 replay=0)
+ds4: Qwen MTP accepted-length histogram 1=0 2=0 3=1 4=0 5=0 6=0 7=0
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=97.560 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.393 ms draft=13.928 ms verify=54.559 ms capture=BF16-GDN/FP32-PLE restore-select=0.076 ms history=4.520 ms commit=4.604 ms path=direct-full counts(full=1 partial=1 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=2 target_tokens=3 cycle=96.557 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.388 ms draft=13.892 ms verify=54.822 ms capture=BF16-GDN/FP32-PLE restore-select=0.118 ms history=3.039 ms commit=3.160 ms path=direct-partial counts(full=1 partial=2 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.140 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.377 ms draft=13.907 ms verify=54.774 ms capture=BF16-GDN/FP32-PLE restore-select=0.148 ms history=2.782 ms commit=2.933 ms path=direct-partial counts(full=1 partial=3 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.285 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.376 ms draft=13.878 ms verify=55.177 ms capture=BF16-GDN/FP32-PLE restore-select=0.077 ms history=2.705 ms commit=2.785 ms path=direct-partial counts(full=1 partial=4 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.012 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.394 ms draft=13.870 ms verify=54.918 ms capture=BF16-GDN/FP32-PLE restore-select=0.019 ms history=4.506 ms commit=4.537 ms path=direct-full counts(full=2 partial=4 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.257 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.384 ms draft=13.868 ms verify=54.835 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.566 ms commit=4.601 ms path=direct-full counts(full=3 partial=4 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.196 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.439 ms draft=13.929 ms verify=55.011 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.488 ms commit=4.523 ms path=direct-full counts(full=4 partial=4 replay=0)
+ds4: Qwen MTP timing drafted=5 accepted=5 target_tokens=6 cycle=84.409 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.383 ms draft=14.067 ms verify=41.703 ms capture=BF16-GDN/FP32-PLE restore-select=0.068 ms history=3.833 ms commit=3.910 ms path=direct-full counts(full=5 partial=4 replay=0)
+ds4: Qwen MTP accepted-length histogram 1=2 2=1 3=1 4=0 5=1 6=0 7=4
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=uncached suffix shorter than 8192
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=96.891 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.379 ms draft=13.956 ms verify=54.735 ms capture=BF16-GDN/FP32-PLE restore-select=0.106 ms history=3.369 ms commit=3.481 ms path=direct-partial counts(full=5 partial=5 replay=0)
+ds4: Qwen MTP timing drafted=1 accepted=0 target_tokens=1 cycle=24.126 ms verifier=free-first
+ds4: Qwen MTP timing drafted=1 accepted=0 target_tokens=1 cycle=24.236 ms verifier=free-first
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=97.036 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.379 ms draft=13.870 ms verify=55.072 ms capture=BF16-GDN/FP32-PLE restore-select=0.102 ms history=3.441 ms commit=3.546 ms path=direct-partial counts(full=5 partial=6 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=2 target_tokens=3 cycle=96.605 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.381 ms draft=13.833 ms verify=54.907 ms capture=BF16-GDN/FP32-PLE restore-select=0.107 ms history=3.103 ms commit=3.212 ms path=direct-partial counts(full=5 partial=7 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.032 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.376 ms draft=13.985 ms verify=54.638 ms capture=BF16-GDN/FP32-PLE restore-select=0.077 ms history=2.750 ms commit=2.831 ms path=direct-partial counts(full=5 partial=8 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=2 target_tokens=3 cycle=96.826 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.378 ms draft=14.018 ms verify=55.007 ms capture=BF16-GDN/FP32-PLE restore-select=0.084 ms history=3.092 ms commit=3.181 ms path=direct-partial counts(full=5 partial=9 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.792 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.388 ms draft=13.902 ms verify=55.204 ms capture=BF16-GDN/FP32-PLE restore-select=0.086 ms history=2.831 ms commit=2.922 ms path=direct-partial counts(full=5 partial=10 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.366 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.389 ms draft=13.863 ms verify=55.102 ms capture=BF16-GDN/FP32-PLE restore-select=0.075 ms history=2.720 ms commit=2.800 ms path=direct-partial counts(full=5 partial=11 replay=0)
+ds4: Qwen MTP scheduler switching to target decode cycles=9 target_tokens=22 actual=725.094ms baseline=475.707ms
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.617 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.564 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.643 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.673 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.751 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.743 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.592 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.681 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.823 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.596 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.587 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.542 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.578 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.520 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.737 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.544 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.578 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.537 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.617 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.023 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.280 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.988 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.648 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.669 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.737 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.585 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.641 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.719 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.600 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.655 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.776 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.708 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.820 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.716 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.760 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.701 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.737 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.732 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.757 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.813 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.782 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.674 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.661 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.749 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.762 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.781 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.815 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.751 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.808 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.879 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.116 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.181 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.075 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.014 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.136 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.848 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.954 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.806 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.760 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.708 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.888 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.788 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.814 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.868 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.845 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.045 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.865 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.828 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=22.024 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.710 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.677 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.707 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.758 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.619 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.626 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.806 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.787 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.665 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.721 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.682 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.782 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.760 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.726 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.778 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.841 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.740 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.743 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.778 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.755 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.770 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.718 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.755 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.720 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.699 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.712 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.790 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.850 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.734 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.716 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.693 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.788 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.867 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.755 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.686 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.735 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.686 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.787 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.702 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.766 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.747 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.716 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.791 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.753 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.747 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.852 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.751 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.926 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.748 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.705 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.761 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.764 ms verifier=scheduler-bypass
+ds4: Qwen MTP timing drafted=0 accepted=0 target_tokens=1 cycle=21.840 ms verifier=scheduler-bypass
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=uncached suffix shorter than 8192
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=99.151 ms verifier=block
+ds4: Qwen MTP stages snapshot=1.283 ms draft=14.061 ms verify=54.871 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.590 ms commit=4.623 ms path=direct-full counts(full=6 partial=11 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=97.572 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.377 ms draft=13.842 ms verify=54.637 ms capture=BF16-GDN/FP32-PLE restore-select=0.015 ms history=4.526 ms commit=4.550 ms path=direct-full counts(full=7 partial=11 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.216 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.381 ms draft=13.941 ms verify=54.832 ms capture=BF16-GDN/FP32-PLE restore-select=0.075 ms history=2.754 ms commit=2.832 ms path=direct-partial counts(full=7 partial=12 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=2 target_tokens=3 cycle=96.191 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.367 ms draft=13.921 ms verify=54.570 ms capture=BF16-GDN/FP32-PLE restore-select=0.065 ms history=3.019 ms commit=3.087 ms path=direct-partial counts(full=7 partial=13 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.126 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.398 ms draft=13.886 ms verify=55.073 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.464 ms commit=4.486 ms path=direct-full counts(full=8 partial=13 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=96.480 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.381 ms draft=13.881 ms verify=54.677 ms capture=BF16-GDN/FP32-PLE restore-select=0.074 ms history=3.378 ms commit=3.456 ms path=direct-partial counts(full=8 partial=14 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=2 target_tokens=3 cycle=96.630 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.391 ms draft=13.930 ms verify=55.021 ms capture=BF16-GDN/FP32-PLE restore-select=0.081 ms history=3.017 ms commit=3.102 ms path=direct-partial counts(full=8 partial=15 replay=0)
+ds4: Qwen MTP timing drafted=1 accepted=0 target_tokens=1 cycle=25.382 ms verifier=free-first
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.177 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.405 ms draft=13.971 ms verify=54.757 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.604 ms commit=4.636 ms path=direct-full counts(full=9 partial=15 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.232 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.374 ms draft=13.980 ms verify=54.844 ms capture=BF16-GDN/FP32-PLE restore-select=0.077 ms history=2.768 ms commit=2.849 ms path=direct-partial counts(full=9 partial=16 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=4 target_tokens=5 cycle=97.191 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.370 ms draft=13.873 ms verify=55.004 ms capture=BF16-GDN/FP32-PLE restore-select=0.119 ms history=3.727 ms commit=3.849 ms path=direct-partial counts(full=9 partial=17 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=6 target_tokens=7 cycle=98.365 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.376 ms draft=14.032 ms verify=55.036 ms capture=BF16-GDN/FP32-PLE restore-select=0.128 ms history=4.540 ms commit=4.673 ms path=direct-partial counts(full=9 partial=18 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.422 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.428 ms draft=13.935 ms verify=54.794 ms capture=BF16-GDN/FP32-PLE restore-select=0.108 ms history=2.792 ms commit=2.904 ms path=direct-partial counts(full=9 partial=19 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.531 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.399 ms draft=14.014 ms verify=54.771 ms capture=BF16-GDN/FP32-PLE restore-select=0.072 ms history=2.750 ms commit=2.825 ms path=direct-partial counts(full=9 partial=20 replay=0)
+ds4: Qwen MTP timing drafted=1 accepted=0 target_tokens=1 cycle=24.282 ms verifier=free-first
+ds4: Qwen MTP timing drafted=1 accepted=0 target_tokens=1 cycle=24.183 ms verifier=free-first
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=96.703 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.402 ms draft=13.909 ms verify=54.663 ms capture=BF16-GDN/FP32-PLE restore-select=0.076 ms history=3.531 ms commit=3.611 ms path=direct-partial counts(full=9 partial=21 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.309 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.408 ms draft=13.890 ms verify=54.905 ms capture=BF16-GDN/FP32-PLE restore-select=0.089 ms history=2.762 ms commit=2.855 ms path=direct-partial counts(full=9 partial=22 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.026 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.374 ms draft=13.934 ms verify=54.801 ms capture=BF16-GDN/FP32-PLE restore-select=0.050 ms history=4.529 ms commit=4.585 ms path=direct-full counts(full=10 partial=22 replay=0)
+ds4: Qwen MTP accepted-length histogram 1=10 2=5 3=5 4=1 5=1 6=1 7=9
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=97.079 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.371 ms draft=13.974 ms verify=54.930 ms capture=BF16-GDN/FP32-PLE restore-select=0.104 ms history=3.367 ms commit=3.473 ms path=direct-partial counts(full=10 partial=23 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.388 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.419 ms draft=13.923 ms verify=54.934 ms capture=BF16-GDN/FP32-PLE restore-select=0.082 ms history=2.742 ms commit=2.828 ms path=direct-partial counts(full=10 partial=24 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.478 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.392 ms draft=13.967 ms verify=54.926 ms capture=BF16-GDN/FP32-PLE restore-select=0.073 ms history=2.695 ms commit=2.772 ms path=direct-partial counts(full=10 partial=25 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=1 target_tokens=2 cycle=96.224 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.383 ms draft=13.907 ms verify=54.815 ms capture=BF16-GDN/FP32-PLE restore-select=0.069 ms history=2.794 ms commit=2.867 ms path=direct-partial counts(full=10 partial=26 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.393 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.387 ms draft=13.962 ms verify=55.204 ms capture=BF16-GDN/FP32-PLE restore-select=0.026 ms history=4.558 ms commit=4.592 ms path=direct-full counts(full=11 partial=26 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.026 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.371 ms draft=13.935 ms verify=54.917 ms capture=BF16-GDN/FP32-PLE restore-select=0.048 ms history=4.570 ms commit=4.624 ms path=direct-full counts(full=12 partial=26 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.114 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.376 ms draft=13.989 ms verify=54.884 ms capture=BF16-GDN/FP32-PLE restore-select=0.048 ms history=4.486 ms commit=4.541 ms path=direct-full counts(full=13 partial=26 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=3 target_tokens=4 cycle=96.937 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.378 ms draft=13.989 ms verify=54.816 ms capture=BF16-GDN/FP32-PLE restore-select=0.070 ms history=3.391 ms commit=3.464 ms path=direct-partial counts(full=13 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=97.902 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.373 ms draft=13.896 ms verify=54.774 ms capture=BF16-GDN/FP32-PLE restore-select=0.018 ms history=4.516 ms commit=4.539 ms path=direct-full counts(full=14 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.270 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.387 ms draft=13.961 ms verify=54.981 ms capture=BF16-GDN/FP32-PLE restore-select=0.028 ms history=4.545 ms commit=4.579 ms path=direct-full counts(full=15 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=97.836 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.371 ms draft=13.887 ms verify=54.808 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.499 ms commit=4.533 ms path=direct-full counts(full=16 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.197 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.398 ms draft=13.945 ms verify=55.088 ms capture=BF16-GDN/FP32-PLE restore-select=0.018 ms history=4.518 ms commit=4.553 ms path=direct-full counts(full=17 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.186 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.389 ms draft=13.928 ms verify=54.952 ms capture=BF16-GDN/FP32-PLE restore-select=0.017 ms history=4.492 ms commit=4.522 ms path=direct-full counts(full=18 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.159 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.365 ms draft=13.990 ms verify=55.062 ms capture=BF16-GDN/FP32-PLE restore-select=0.014 ms history=4.536 ms commit=4.565 ms path=direct-full counts(full=19 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=99.056 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.395 ms draft=14.195 ms verify=55.509 ms capture=BF16-GDN/FP32-PLE restore-select=0.018 ms history=4.555 ms commit=4.597 ms path=direct-full counts(full=20 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.264 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.383 ms draft=13.959 ms verify=55.093 ms capture=BF16-GDN/FP32-PLE restore-select=0.048 ms history=4.530 ms commit=4.586 ms path=direct-full counts(full=21 partial=27 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=5 target_tokens=6 cycle=98.339 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.382 ms draft=14.011 ms verify=55.453 ms capture=BF16-GDN/FP32-PLE restore-select=0.107 ms history=3.987 ms commit=4.096 ms path=direct-partial counts(full=21 partial=28 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.728 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.378 ms draft=14.072 ms verify=55.246 ms capture=BF16-GDN/FP32-PLE restore-select=0.031 ms history=4.557 ms commit=4.594 ms path=direct-full counts(full=22 partial=28 replay=0)
+ds4: Qwen MTP timing drafted=7 accepted=7 target_tokens=8 cycle=98.751 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.403 ms draft=14.102 ms verify=55.103 ms capture=BF16-GDN/FP32-PLE restore-select=0.014 ms history=4.539 ms commit=4.573 ms path=direct-full counts(full=23 partial=28 replay=0)
+ds4: Qwen MTP timing drafted=2 accepted=2 target_tokens=3 cycle=67.795 ms verifier=block
+ds4: Qwen MTP stages snapshot=0.376 ms draft=14.009 ms verify=26.298 ms capture=BF16-GDN/FP32-PLE restore-select=0.021 ms history=2.916 ms commit=2.957 ms path=direct-full counts(full=24 partial=28 replay=0)
+ds4: Qwen MTP accepted-length histogram 1=13 2=6 3=7 4=1 5=2 6=1 7=22
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11664 expected=11721 rows=60 pos=11722 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11722
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=17339 expected=17460 rows=466 pos=17461 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=466 pos=17461
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11676 expected=11731 rows=60 pos=11732 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11732
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=17417 expected=17453 rows=60 pos=17454 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=17454
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11664 expected=11715 rows=60 pos=11716 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11716
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=13452 expected=13527 rows=61 pos=13528 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=61 pos=13528
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11663 expected=11716 rows=60 pos=11717 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11717
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=17583 expected=17662 rows=60 pos=17663 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=17663
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=17666 expected=17739 rows=61 pos=17740 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=61 pos=17740
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=24421 expected=26619 rows=90 pos=26620 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=90 pos=26620
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=27366 expected=28009 rows=60 pos=28010 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=28010
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=28510 expected=28735 rows=44 pos=28736 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=44 pos=28736
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=29046 expected=29297 rows=204 pos=29298 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=204 pos=29298
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=30910 expected=31040 rows=110 pos=31041 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=110 pos=31041
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=31150 expected=31305 rows=36 pos=31306 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=36 pos=31306
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11661 expected=11731 rows=60 pos=11732 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11732
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=20255 expected=20307 rows=60 pos=20308 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=20308
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=21047 expected=21120 rows=61 pos=21121 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=61 pos=21121
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=20251 expected=20303 rows=60 pos=20304 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=20304
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=28046 expected=28120 rows=1494 pos=28121 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=1494 pos=28121
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=29614 expected=29867 rows=70 pos=29868 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=70 pos=29868
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=29937 expected=30010 rows=514 pos=30011 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=514 pos=30011
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=30524 expected=30665 rows=123 pos=30666 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=123 pos=30666
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=30788 expected=30944 rows=111 pos=30945 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=111 pos=30945
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=20252 expected=20309 rows=60 pos=20310 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=20310
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=34781 expected=34861 rows=355 pos=34862 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=355 pos=34862
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=35216 expected=35310 rows=123 pos=35311 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=123 pos=35311
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=35433 expected=35482 rows=60 pos=35483 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=35483
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=35907 expected=35946 rows=216 pos=35947 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=216 pos=35947
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11664 expected=11718 rows=60 pos=11719 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11719
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=19844 expected=19922 rows=72 pos=19923 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=72 pos=19923
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=19994 expected=20087 rows=60 pos=20088 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=20088
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11679 expected=11730 rows=60 pos=11731 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11731
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11673 expected=11731 rows=60 pos=11732 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11732
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=18515 expected=18978 rows=21 pos=18979 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=21 pos=18979
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=19587 expected=19839 rows=37 pos=19840 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=37 pos=19840
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=19876 expected=19969 rows=62 pos=19970 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=62 pos=19970
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=20256 expected=20313 rows=60 pos=20314 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=20314
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=25650 expected=25789 rows=587 pos=25790 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=587 pos=25790
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=26376 expected=26511 rows=189 pos=26512 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=189 pos=26512
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11712 expected=12248 rows=60 pos=12249 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=12249
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=8192 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=cold Qwen native path
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen MTP history frontier short cache=11820 expected=11862 rows=60 pos=11863 trunk=1
+ds4: Qwen graph failed stage=MTP-history rows=60 pos=11863
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache
+ds4: Qwen prefill selected chunk=2048 microtile=512 PLE=SSD-pread/BF16-double-buffer reason=resuming prefix cache

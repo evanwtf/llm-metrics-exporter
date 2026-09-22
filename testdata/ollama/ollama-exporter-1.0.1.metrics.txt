@@ -1,0 +1,81 @@
+# HELP ollama_exporter_build_info Ollama exporter build information
+# TYPE ollama_exporter_build_info gauge
+ollama_exporter_build_info{version="1.0.0",ollama_host="localhost:11434",node_version="v24.6.0"} 1
+
+# HELP ollama_up Whether the Ollama server is responding
+# TYPE ollama_up gauge
+ollama_up 1
+
+# HELP ollama_version_info Ollama version information
+# TYPE ollama_version_info gauge
+ollama_version_info{version="0.34.0"} 1
+
+# HELP ollama_models_total Total number of models available
+# TYPE ollama_models_total gauge
+ollama_models_total 4
+
+# HELP ollama_model_info Model information
+# TYPE ollama_model_info gauge
+ollama_model_info{model_name="nemotron-3-nano:30b-a3b-q8_0",family="nemotron_h_moe",format="gguf",parameter_size="31.6B",quantization_level="Q8_0",parent_model="unknown"} 1
+ollama_model_info{model_name="nemotron-cascade-2:30b-a3b-q4_K_M",family="nemotron_h_moe",format="gguf",parameter_size="31.6B",quantization_level="Q4_K_M",parent_model="unknown"} 1
+ollama_model_info{model_name="nemotron3:33b-q4_K_M",family="nemotron_h_omni",format="gguf",parameter_size="33.0B",quantization_level="Q4_K_M",parent_model="unknown"} 1
+ollama_model_info{model_name="qwen3.6:27b-coding",family="qwen35",format="gguf",parameter_size="27.3B",quantization_level="Q4_K_M",parent_model="qwen3.6-source:27b-mtp-q4_K_M-20260824"} 1
+
+# HELP ollama_model_size_bytes Model size in bytes
+# TYPE ollama_model_size_bytes gauge
+ollama_model_size_bytes{model_name="nemotron-3-nano:30b-a3b-q8_0"} 33585510800
+ollama_model_size_bytes{model_name="nemotron-cascade-2:30b-a3b-q4_K_M"} 24272443719
+ollama_model_size_bytes{model_name="nemotron3:33b-q4_K_M"} 27638631632
+ollama_model_size_bytes{model_name="qwen3.6:27b-coding"} 17769076935
+
+# HELP ollama_model_modified_timestamp_seconds Model last modified timestamp
+# TYPE ollama_model_modified_timestamp_seconds gauge
+ollama_model_modified_timestamp_seconds{model_name="nemotron-3-nano:30b-a3b-q8_0"} 1789145336.992
+ollama_model_modified_timestamp_seconds{model_name="nemotron-cascade-2:30b-a3b-q4_K_M"} 1789142633.346
+ollama_model_modified_timestamp_seconds{model_name="nemotron3:33b-q4_K_M"} 1789105522.461
+ollama_model_modified_timestamp_seconds{model_name="qwen3.6:27b-coding"} 1789100225.542
+
+# HELP ollama_running_models Currently loaded models
+# TYPE ollama_running_models gauge
+
+# HELP ollama_model_memory_bytes Memory used by running model
+# TYPE ollama_model_memory_bytes gauge
+
+# HELP ollama_exporter_scrape_duration_seconds Time spent scraping Ollama
+# TYPE ollama_exporter_scrape_duration_seconds histogram
+ollama_exporter_scrape_duration_seconds_bucket{le="0.005",operation="list_models"} 2030
+ollama_exporter_scrape_duration_seconds_bucket{le="0.01",operation="list_models"} 2048
+ollama_exporter_scrape_duration_seconds_bucket{le="0.025",operation="list_models"} 2157
+ollama_exporter_scrape_duration_seconds_bucket{le="0.05",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.1",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.25",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.5",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="1",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="2.5",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="5",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="10",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="+Inf",operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_sum{operation="list_models"} 3.874130980999997
+ollama_exporter_scrape_duration_seconds_count{operation="list_models"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.005",operation="list_running"} 2093
+ollama_exporter_scrape_duration_seconds_bucket{le="0.01",operation="list_running"} 2123
+ollama_exporter_scrape_duration_seconds_bucket{le="0.025",operation="list_running"} 2158
+ollama_exporter_scrape_duration_seconds_bucket{le="0.05",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.1",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.25",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="0.5",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="1",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="2.5",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="5",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="10",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_bucket{le="+Inf",operation="list_running"} 2159
+ollama_exporter_scrape_duration_seconds_sum{operation="list_running"} 1.774845760000001
+ollama_exporter_scrape_duration_seconds_count{operation="list_running"} 2159
+
+# HELP ollama_exporter_scrapes_total Total number of scrapes
+# TYPE ollama_exporter_scrapes_total counter
+ollama_exporter_scrapes_total{status="success"} 2159
+
+# HELP ollama_exporter_last_scrape_timestamp_seconds Last successful scrape timestamp
+# TYPE ollama_exporter_last_scrape_timestamp_seconds gauge
+ollama_exporter_last_scrape_timestamp_seconds 1790114373.104

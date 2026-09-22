@@ -1,0 +1,10 @@
+# build output
+/dist/
+/llm-metrics-exporter
+*.test
+coverage.out
+
+# local private names for scripts/check-public; never committed
+/.public-denylist
+
+.DS_Store
