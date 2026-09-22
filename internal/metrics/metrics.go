@@ -100,8 +100,9 @@ var (
 		Help: "1 if the engine serves no model named served_model in the registration.",
 	}
 	ArmInfo = Def{
-		Name: "llm_arm_info", Kind: Gauge, Identity: true, Labels: []string{"issue"},
-		Help: "Registration metadata that is not an identity label. Always 1.",
+		Name: "llm_arm_info", Kind: Gauge, Identity: true,
+		Labels: []string{"issue", "adapter_version", "exporter_version"},
+		Help:   "Registration and build metadata for this arm. adapter_version changes when the adapter's mapping changes. Always 1.",
 	}
 	ScrapeErrors = Def{
 		Name: "llm_exporter_scrape_errors_total", Kind: Counter, Identity: true,
@@ -111,19 +112,18 @@ var (
 		Name: "llm_exporter_last_success_timestamp_seconds", Kind: Gauge, Identity: true,
 		Help: "Unix time of the last collection that got telemetry. 0 if none has.",
 	}
-	Registrations = Def{
-		Name: "llm_exporter_registrations", Kind: Gauge, Labels: []string{"state"},
-		Help: "Registration files found on the last scrape, by state (valid or invalid).",
-	}
-	AdapterInfo = Def{
-		Name: "llm_exporter_adapter_info", Kind: Gauge, Labels: []string{"engine", "adapter_version"},
-		Help: "Adapters compiled into this exporter. adapter_version changes when a mapping changes. Always 1.",
-	}
-	BuildInfo = Def{
-		Name: "llm_exporter_build_info", Kind: Gauge, Labels: []string{"version", "revision", "goversion"},
-		Help: "Exporter build. Always 1.",
+	// RegistrationInvalid has no identity label set to borrow: the file did
+	// not validate. engine and model are the file's own values, or "unknown"
+	// when it has none, so the series still has both labels without a guess.
+	RegistrationInvalid = Def{
+		Name: "llm_registration_invalid", Kind: Gauge,
+		Labels: []string{"engine", "model", "host", "file"},
+		Help:   "1 for each registration file that did not parse or validate. Its arm is not measured.",
 	}
 )
+
+// Unknown is the label value for an engine or model a file does not state.
+const Unknown = "unknown"
 
 // AdapterDefs are the series an adapter may emit.
 func AdapterDefs() []Def {
@@ -138,8 +138,17 @@ func AdapterDefs() []Def {
 func ExporterDefs() []Def {
 	return []Def{
 		EngineUp, RegistrationMismatch, ArmInfo, ScrapeErrors, LastSuccess,
-		Registrations, AdapterInfo, BuildInfo,
+		RegistrationInvalid,
 	}
+}
+
+// AllLabels is the full label list of a series: identity labels, if any,
+// then Labels.
+func (d Def) AllLabels() []string {
+	if !d.Identity {
+		return d.Labels
+	}
+	return append(append([]string{}, IdentityLabels...), d.Labels...)
 }
 
 // Hist is a histogram snapshot with cumulative buckets keyed by upper bound.

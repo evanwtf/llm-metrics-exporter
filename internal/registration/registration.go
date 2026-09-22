@@ -46,10 +46,34 @@ type Registration struct {
 }
 
 // Invalid is a file in the directory that did not parse or validate.
+// Engine and Model are the file's own values when it states them, else
+// "unknown", so its series can carry both labels without a guess.
 type Invalid struct {
-	File string
-	Err  error
+	File   string
+	Engine string
+	Model  string
+	Err    error
 }
+
+func newInvalid(file string, body []byte, err error) Invalid {
+	inv := Invalid{File: file, Engine: unknown, Model: unknown, Err: err}
+	var raw struct {
+		Engine string `yaml:"engine"`
+		Model  string `yaml:"model"`
+	}
+	if yaml.Unmarshal(body, &raw) == nil {
+		if tokenRE.MatchString(raw.Engine) {
+			inv.Engine = raw.Engine
+		}
+		if tokenRE.MatchString(raw.Model) {
+			inv.Model = raw.Model
+		}
+	}
+	return inv
+}
+
+// unknown matches metrics.Unknown; this package does not import metrics.
+const unknown = "unknown"
 
 const suffix = ".yaml"
 
@@ -177,7 +201,7 @@ func LoadDir(dir string) (valid []Registration, invalid []Invalid) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
-			invalid = append(invalid, Invalid{File: dir, Err: err})
+			invalid = append(invalid, newInvalid(dir, nil, err))
 		}
 		return nil, invalid
 	}
@@ -194,7 +218,7 @@ func LoadDir(dir string) (valid []Registration, invalid []Invalid) {
 				continue
 			}
 		}
-		invalid = append(invalid, Invalid{File: name, Err: err})
+		invalid = append(invalid, newInvalid(name, body, err))
 	}
 	sort.Slice(valid, func(i, j int) bool { return valid[i].Backend < valid[j].Backend })
 	return valid, invalid

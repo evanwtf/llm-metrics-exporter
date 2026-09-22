@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"math"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -99,5 +100,18 @@ func TestKeyDistinguishesLabelValues(t *testing.T) {
 	b := Sample{Def: &Tokens, Labels: []string{"prefill"}}
 	if a.Key() == b.Key() {
 		t.Fatal("different phases share a key")
+	}
+}
+
+// Operator requirement (local-llm#675): every series carries engine and
+// model. The collector test checks the same over a full /metrics body.
+func TestEverySeriesHasEngineAndModel(t *testing.T) {
+	for _, d := range append(AdapterDefs(), ExporterDefs()...) {
+		labels := d.AllLabels()
+		for _, want := range []string{"engine", "model"} {
+			if !slices.Contains(labels, want) {
+				t.Errorf("%s: no %s label (has %v)", d.Name, want, labels)
+			}
+		}
 	}
 }

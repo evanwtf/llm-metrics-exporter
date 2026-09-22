@@ -229,3 +229,21 @@ func mustParse(t *testing.T, body string) Registration {
 	}
 	return r
 }
+
+// An invalid file still yields engine and model labels: its own values, or
+// "unknown" when it states none (llm_registration_invalid).
+func TestInvalidCarriesItsOwnEngineAndModel(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "a.yaml"), []byte("version: 1\nengine: sglang\nmodel: m1\n"), 0o644)
+	os.WriteFile(filepath.Join(dir, "b.yaml"), []byte(":: not yaml"), 0o644)
+	_, invalid := LoadDir(dir)
+	if len(invalid) != 2 {
+		t.Fatalf("invalid %+v", invalid)
+	}
+	if invalid[0].Engine != "sglang" || invalid[0].Model != "m1" {
+		t.Errorf("a.yaml: %+v", invalid[0])
+	}
+	if invalid[1].Engine != "unknown" || invalid[1].Model != "unknown" {
+		t.Errorf("b.yaml: %+v", invalid[1])
+	}
+}
