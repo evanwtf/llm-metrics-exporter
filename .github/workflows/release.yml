@@ -12,10 +12,14 @@ permissions:
 jobs:
   release:
     runs-on: [self-hosted, Linux, X64]
-    env:
-      GOCACHE: ${{ runner.temp }}/go-build-${{ github.run_id }}-${{ github.run_attempt }}
-      GOMODCACHE: ${{ runner.temp }}/go-mod-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
+      # A shared self-hosted runner: keep Go's caches inside this run, so a
+      # sibling job's files (possibly root-owned) cannot break this one. The
+      # runner context is not available in job-level env, hence this step.
+      - name: scope Go caches to this run
+        run: |
+          echo "GOCACHE=$RUNNER_TEMP/go-build-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=$RUNNER_TEMP/go-mod-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
