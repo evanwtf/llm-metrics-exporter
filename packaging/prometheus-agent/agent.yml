@@ -1,0 +1,26 @@
+# Prometheus in agent mode, on the same host as the exporter. It scrapes the
+# exporter and remote-writes home; nothing central scrapes this host.
+#
+#   prometheus --agent --config.file=agent.yml --storage.agent.path=<dir>
+#
+# The central Prometheus needs --web.enable-remote-write-receiver.
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: llm-metrics-exporter
+    # Below the scrape interval, and above the exporter's --timeout (5s).
+    scrape_timeout: 10s
+    # Keep the exporter's host label rather than renaming it exported_host.
+    honor_labels: true
+    static_configs:
+      - targets: ["127.0.0.1:9109"]
+
+remote_write:
+  - url: https://<central-prometheus>/api/v1/write
+    write_relabel_configs:
+      # The exporter's series, plus up{job="llm-metrics-exporter"}: with the
+      # exporter down every llm_* series goes stale, and up is what says so.
+      - source_labels: [__name__]
+        regex: "llm_.*|up"
+        action: keep

@@ -1,0 +1,26 @@
+# systemd user unit. It runs as the user that launches the engines, so both
+# sides share the default registration directory
+# (~/.local/state/llm-metrics-exporter/registrations).
+#
+#   install -m 0644 packaging/systemd/llm-metrics-exporter.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now llm-metrics-exporter
+#   sudo loginctl enable-linger "$USER"     # start at boot, not at login
+[Unit]
+Description=llm-metrics-exporter: canonical LLM inference metrics
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Listens on all interfaces: the benchmark harness reads counters over the
+# LAN. Put a firewall in front if the network is not trusted.
+ExecStart=%h/.local/bin/llm-metrics-exporter serve
+Restart=on-failure
+RestartSec=5
+# The host shares memory with the model. Stay small, and die rather than
+# grow (AGENTS.md, Footprint).
+MemoryMax=128M
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

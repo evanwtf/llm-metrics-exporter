@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchAgent: runs as the user that launches the engines, from login.
+  launchd does not expand ~ or $HOME, so install with the paths filled in:
+
+    sed "s#@HOME@#$HOME#g" packaging/launchd/com.github.evanwtf.llm-metrics-exporter.plist \
+      > ~/Library/LaunchAgents/com.github.evanwtf.llm-metrics-exporter.plist
+    launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.github.evanwtf.llm-metrics-exporter.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.github.evanwtf.llm-metrics-exporter</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>@HOME@/.local/bin/llm-metrics-exporter</string>
+    <string>serve</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>@HOME@</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>@HOME@/Library/Logs/llm-metrics-exporter.log</string>
+  <key>StandardErrorPath</key>
+  <string>@HOME@/Library/Logs/llm-metrics-exporter.log</string>
+</dict>
+</plist>

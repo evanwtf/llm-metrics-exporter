@@ -69,13 +69,18 @@ llm_spec_verify_steps_total{<id>}              verification steps that proposed 
 # health and provenance
 llm_engine_up{<id>}                            1 = telemetry obtained on the last attempt
 llm_registration_mismatch{<id>}                1 = engine serves a model other than the registered one
-llm_arm_info{<id>, issue} 1
+llm_arm_info{<id>, issue, adapter_version, exporter_version} 1
 llm_exporter_scrape_errors_total{<id>}
 llm_exporter_last_success_timestamp_seconds{<id>}
-llm_exporter_registrations{state="valid|invalid"}
-llm_exporter_adapter_info{engine, adapter_version} 1
-llm_exporter_build_info{version, revision, goversion} 1
+llm_registration_invalid{engine, model, host, file} 1    engine/model: the file's own, or "unknown"
 ```
+
+**Every series carries `engine` and `model`** (operator requirement,
+2026-09-22). So there is no exporter-wide series: the adapter and exporter
+versions ride on each arm's `llm_arm_info`, and `/metrics` has no Go runtime
+or process series. `up{job="llm-metrics-exporter"}`, which the Prometheus
+Agent writes about the scrape itself, is the one series without them, and it
+is what says the exporter is down.
 
 Queries:
 
@@ -242,7 +247,7 @@ trace_path: /path/to/jsonl # MTPLX only: MTPLX_DECODE_TRACE_JSONL
   identity-aware delete, so a launcher in any language gets both by calling it.
 
 The exporter re-reads the directory on every scrape. A file that does not parse
-or validate is logged and counted in `llm_exporter_registrations{state="invalid"}`.
+or validate is logged and exported as `llm_registration_invalid`.
 A new `run_id` for a backend restarts that backend's adapter and its
 exporter-owned counters.
 

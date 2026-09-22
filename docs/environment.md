@@ -36,13 +36,15 @@ Seven local engines are in use.
 
 | engine | where its numbers come from | notes |
 |---|---|---|
-| **vLLM** | native Prometheus `/metrics` | `vllm:prompt_tokens_total`, `vllm:generation_tokens_total`, prefill/decode time histograms, `vllm:spec_decode_*` when speculative decoding is on. Labelled with the served model name |
-| **llama.cpp** (`llama-server`) | native `/metrics`, only with `--metrics` | `llamacpp:prompt_tokens_total`, `prompt_seconds_total`, `tokens_predicted_total`, `tokens_predicted_seconds_total` |
-| **SGLang** | native `/metrics`, only with `--enable-metrics` | its own metric names; whether it has a decode-seconds counter, and where its speculative accept rate lives, is **unverified** |
-| **Ollama** | per-response stats: `prompt_eval_count`, `prompt_eval_duration`, `eval_count`, `eval_duration` (durations in ns) | not cumulative counters. Something must observe responses. A third-party Ollama exporter is already deployed on some hosts and should be evaluated before building a proxy |
-| **ds4** | a timing log to stderr, switched on by an environment variable | a DeepSeek-family engine, Mac and Spark. Per-cycle speculative-decoding lines |
-| **MTPLX** | a decode trace in JSONL, switched on by an environment variable | Mac |
-| **mlx-serve** | engine-specific | Mac. The stats surface is **unknown** |
+| **vLLM** | native Prometheus `/metrics` | `prompt_tokens_by_source_total` splits computed from cached prompt tokens; request-clock prefill and decode histograms; `spec_decode_*` when speculative decoding is on. Labelled with `model_name` |
+| **llama.cpp** (`llama-server`) | native `/metrics`, only with `--metrics` | `prompt_tokens_total` (computed only), `prompt_tokens_cached_total`, `prompt_seconds_total`, `tokens_predicted_total`, `tokens_predicted_seconds_total`, `spec_decode_*`. The meaning of `prompt_seconds_total` changed on 2026-08-13 |
+| **SGLang** | native `/metrics`, only with `--enable-metrics` | `realtime_tokens_total{mode}` splits computed, cached and decode tokens. No per-phase seconds counter; speculative acceptance is gauges only |
+| **mlx-serve** | native `/metrics`, only with `--metrics` | vLLM names for compatibility, plus `mlx_serve:prefill_tokens_total` (computed) and `mlx_serve:prefix_cache_tokens_total` |
+| **Ollama** | per-response stats: `prompt_eval_count`, `prompt_eval_duration`, `eval_count`, `eval_duration` (durations in ns) | not cumulative counters, and no `/metrics`. The third-party exporter deployed on some hosts reports model inventory only, no token counts |
+| **ds4** | a timing log to stderr, switched on by `DS4_MTP_TIMING` | a DeepSeek-family engine, Mac and Spark. One line per speculative cycle; no `/metrics` |
+| **MTPLX** | a decode trace in JSONL, switched on by `MTPLX_DECODE_TRACE_JSONL` | Mac |
+
+The evidence for each row is in [`findings.md`](findings.md).
 
 Several recipes run their engine inside Docker, and one engine can serve on
 different ports depending on the recipe.
