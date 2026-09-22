@@ -4,6 +4,7 @@
 //	llm-metrics-exporter [serve] [flags]      run the exporter
 //	llm-metrics-exporter register [flags]     write a registration atomically
 //	llm-metrics-exporter deregister [flags]   remove one, only if run_id matches
+//	llm-metrics-exporter health [--url URL]   exit 0 if the exporter answers (container healthcheck)
 //	llm-metrics-exporter version
 package main
 
@@ -67,11 +68,13 @@ func run(args []string, out io.Writer) int {
 		return register(args, out)
 	case "deregister":
 		return deregister(args, out)
+	case "health":
+		return health(args, out)
 	case "version":
 		logger(out, "info").Info("llm-metrics-exporter", versionAttrs()...)
 		return exitOK
 	default:
-		logger(out, "info").Error("unknown command; want serve, register, deregister or version", "command", cmd)
+		logger(out, "info").Error("unknown command; want serve, register, deregister, health or version", "command", cmd)
 		return exitUsage
 	}
 }
@@ -88,6 +91,14 @@ func logger(out io.Writer, level string) *slog.Logger {
 		l = slog.LevelInfo
 	}
 	return slog.New(slog.NewTextHandler(out, &slog.HandlerOptions{Level: l}))
+}
+
+// defaultHost is $LLM_EXPORTER_HOST, or the short hostname.
+func defaultHost() string {
+	if h := os.Getenv("LLM_EXPORTER_HOST"); h != "" {
+		return h
+	}
+	return shortHostname()
 }
 
 func shortHostname() string {
@@ -112,7 +123,7 @@ func serve(args []string, out io.Writer) int {
 	var cfg serveConfig
 	fl.StringVar(&cfg.listen, "listen", defaultListen, "address to serve /metrics on")
 	fl.StringVar(&cfg.dir, "registration-dir", registration.DefaultDir(), "directory of arm registrations")
-	fl.StringVar(&cfg.host, "host", shortHostname(), "value of the host label")
+	fl.StringVar(&cfg.host, "host", defaultHost(), "value of the host label (default $LLM_EXPORTER_HOST, else the short hostname)")
 	fl.DurationVar(&cfg.timeout, "timeout", defaultTimeout, "per-arm collection timeout; keep it below the scrape timeout")
 	level := fl.String("log-level", "info", "debug, info, warn or error")
 	if err := fl.Parse(args); err != nil {
@@ -241,4 +252,29 @@ func deregister(args []string, out io.Writer) int {
 		log.Error("deregister failed", "err", err)
 		return exitError
 	}
+}
+
+// health GETs the exporter's /healthz. The container image has no shell or
+// curl, so its HEALTHCHECK runs the binary itself.
+func health(args []string, out io.Writer) int {
+	fl := flag.NewFlagSet("health", flag.ContinueOnError)
+	fl.SetOutput(out)
+	url := fl.String("url", "http://127.0.0.1"+defaultListen+"/healthz", "URL that must answer 200")
+	timeout := fl.Duration("timeout", 3*time.Second, "give up after this long")
+	if err := fl.Parse(args); err != nil {
+		return exitUsage
+	}
+	log := logger(out, "info")
+	client := &http.Client{Timeout: *timeout}
+	resp, err := client.Get(*url)
+	if err != nil {
+		log.Error("unhealthy", "url", *url, "err", err)
+		return exitError
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Error("unhealthy", "url", *url, "status", resp.Status)
+		return exitError
+	}
+	return exitOK
 }

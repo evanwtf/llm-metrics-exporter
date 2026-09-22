@@ -146,3 +146,36 @@ func TestRegistrationDirDefault(t *testing.T) {
 }
 
 func discard() *slog.Logger { return slog.New(slog.NewTextHandler(io.Discard, nil)) }
+
+// `health` lets a shell-less container check itself (Docker HEALTHCHECK).
+func TestHealth(t *testing.T) {
+	ok := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/healthz" {
+			http.NotFound(w, r)
+		}
+	}))
+	defer ok.Close()
+	if code, out := runCLI(t, "health", "--url", ok.URL+"/healthz"); code != exitOK {
+		t.Fatalf("healthy server: exit %d: %s", code, out)
+	}
+	if code, _ := runCLI(t, "health", "--url", ok.URL+"/missing"); code != exitError {
+		t.Fatalf("404: exit %d", code)
+	}
+	ok.Close()
+	if code, _ := runCLI(t, "health", "--url", ok.URL+"/healthz"); code != exitError {
+		t.Fatalf("server down: exit %d", code)
+	}
+}
+
+// LLM_EXPORTER_HOST sets the host label default; containers use it when the
+// container hostname is not the host's.
+func TestDefaultHostFromEnv(t *testing.T) {
+	t.Setenv("LLM_EXPORTER_HOST", "spark-head")
+	if h := defaultHost(); h != "spark-head" {
+		t.Fatalf("host %q", h)
+	}
+	t.Setenv("LLM_EXPORTER_HOST", "")
+	if h := defaultHost(); h != shortHostname() {
+		t.Fatalf("host %q, want the short hostname", h)
+	}
+}

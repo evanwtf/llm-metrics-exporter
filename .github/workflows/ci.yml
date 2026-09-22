@@ -47,6 +47,29 @@ jobs:
           out=$(dist/llm-metrics-exporter-linux-amd64 --version)
           echo "$out"
           echo "$out" | grep -q "version=$(sed -n 's/^const Version = "\(.*\)"/\1/p' internal/version/version.go)"
+      - name: compose file is valid
+        run: docker compose config -q
+      - name: build the image and run it
+        # The exact runtime stage production uses. It is shell-less, so run it:
+        # --version, then serve a real registration written by the host binary.
+        run: |
+          img=llm-metrics-exporter:ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          name=lme-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT
+          reg=$RUNNER_TEMP/registrations-$GITHUB_RUN_ID
+          trap 'docker rm -f "$name" >/dev/null 2>&1; docker rmi "$img" >/dev/null 2>&1' EXIT
+          docker build --build-arg REVISION="$(git rev-parse --short HEAD)" -t "$img" .
+          docker run --rm "$img" --version
+          # An arm with nothing listening: it must read as down, not vanish.
+          dist/llm-metrics-exporter-linux-amd64 register --registration-dir "$reg" \
+            --backend ci --engine vllm --endpoint http://127.0.0.1:1 --model ci-model --nodes 1 --run-id ci
+          chmod -R a+rX "$reg"
+          docker run -d --name "$name" -p 127.0.0.1::9109 -v "$reg:/registrations:ro" "$img"
+          port=$(docker port "$name" 9109/tcp | head -1 | sed 's/.*://')
+          for i in $(seq 1 20); do curl -sf "http://127.0.0.1:$port/healthz" >/dev/null && break; sleep 0.5; done
+          docker exec "$name" /usr/bin/llm-metrics-exporter health
+          body=$(curl -sf "http://127.0.0.1:$port/metrics")
+          echo "$body" | grep '^llm_'
+          echo "$body" | grep -q '^llm_engine_up{backend="ci",engine="vllm",.*model="ci-model",nodes="1"} 0$'
 
   macos:
     runs-on: [self-hosted, macOS, ARM64]

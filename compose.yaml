@@ -1,0 +1,76 @@
+# llm-metrics-exporter on a Linux inference host.
+#
+#   cp .env.example .env            # optional overrides
+#   docker compose up -d            # the exporter alone
+#   docker compose --profile agent up -d   # plus a Prometheus Agent (see below)
+#
+# On macOS run the binary natively instead (packaging/launchd).
+#
+# Launchers on the host register arms with the host binary
+# (`llm-metrics-exporter register ...`), which writes to the registration
+# directory mounted here read-only.
+name: llm-metrics-exporter
+
+services:
+  exporter:
+    build:
+      context: .
+      args:
+        REVISION: ${REVISION:-unknown}
+    image: llm-metrics-exporter:local
+    restart: unless-stopped
+    # Host networking: registrations name engines as http://127.0.0.1:<port>,
+    # which must mean the host, and the harness reads :9109 over the LAN.
+    # It also gives the container the host's hostname, the host label.
+    network_mode: host
+    environment:
+      # Empty means the host's short hostname.
+      LLM_EXPORTER_HOST: ${LLM_EXPORTER_HOST:-}
+    command:
+      - serve
+      - --registration-dir=/registrations
+      - --listen=${LLM_EXPORTER_LISTEN:-:9109}
+    volumes:
+      - type: bind
+        source: ${LLM_EXPORTER_REGISTRATION_DIR:-${HOME}/.local/state/llm-metrics-exporter/registrations}
+        target: /registrations
+        read_only: true
+        # Refuse to start rather than create a root-owned directory that the
+        # launchers then cannot write. Create it first:
+        #   mkdir -p ~/.local/state/llm-metrics-exporter/registrations
+        bind:
+          create_host_path: false
+      # ds4 arms: the exporter reads the log at the path the registration
+      # names, so mount its directory at the same path, read-only:
+      # - type: bind
+      #   source: /path/to/ds4/logs
+      #   target: /path/to/ds4/logs
+      #   read_only: true
+    # The host shares memory with the model (AGENTS.md, Footprint).
+    mem_limit: 128m
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+
+  # Prometheus in agent mode: scrapes the exporter and remote-writes home.
+  # Copy packaging/prometheus-agent/agent.yml to prometheus-agent.local.yml
+  # (git-ignored), set the remote_write URL, then use --profile agent.
+  agent:
+    profiles: [agent]
+    image: prom/prometheus:v3.14.0
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --agent
+      - --config.file=/etc/prometheus/agent.yml
+      - --storage.agent.path=/prometheus
+      - --web.listen-address=${PROMETHEUS_AGENT_LISTEN:-127.0.0.1:9095}
+    volumes:
+      - ${PROMETHEUS_AGENT_CONFIG:-./prometheus-agent.local.yml}:/etc/prometheus/agent.yml:ro
+      - agent-data:/prometheus
+    depends_on:
+      exporter:
+        condition: service_healthy
+
+volumes:
+  agent-data:

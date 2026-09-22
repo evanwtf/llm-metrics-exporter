@@ -1,0 +1,6 @@
+# The build needs go.mod, go.sum, cmd/ and internal/ only.
+*
+!go.mod
+!go.sum
+!cmd/
+!internal/
