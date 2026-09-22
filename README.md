@@ -9,7 +9,7 @@ of canonical metric names and labels. A Prometheus Agent on the same host
 scrapes it and `remote_write`s to a central Prometheus. Grafana and the
 benchmark harness both read those same counters.
 
-**Status:** design. No code yet. Start with the docs:
+**Status:** design, reviewed ([#1](https://github.com/evanwtf/llm-metrics-exporter/issues/1)). Go. No code yet. Start with the docs:
 
 | doc | read it for |
 |---|---|

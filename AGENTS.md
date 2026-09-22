@@ -18,14 +18,20 @@ before changing anything.
 
 This exporter feeds published benchmark numbers, so:
 
-- **Counters are the source of truth.** Rates are derived at query time. A
-  gauge of tok/s is a convenience and is never quoted.
+- **Counters are the source of truth.** Rates are derived at query time. v1
+  exposes no tok/s gauge.
 - **Prefill and decode are always separate.** Never emit a single blended
   tok/s.
 - **Silence is a bug.** If a registered server cannot be read, export
   `llm_engine_up 0`. Do not drop the series.
 - **Never guess a label.** If an adapter cannot determine the model, it
   reports that. It does not invent a value.
+- **Same name, same meaning.** Two engines' numbers share a canonical series
+  only if they measure the same interval. Each adapter documents the upstream
+  source and interval for every series it emits (`docs/design.md`, *Semantic
+  equivalence*).
+- **Registration is identity.** Labels come from the registration file, and the
+  engine's own model name only validates it.
 - **A counter reset is not negative throughput.** Handle it explicitly.
 - Every adapter has tests against **captured real output** from that engine,
   checked in as fixtures, with the engine version it came from.
