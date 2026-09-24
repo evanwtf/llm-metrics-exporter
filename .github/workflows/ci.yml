@@ -41,6 +41,12 @@ jobs:
           echo "$out" | grep -q "version=$(sed -n 's/^const Version = "\(.*\)"/\1/p' internal/version/version.go)"
       - name: compose file is valid
         run: docker compose config -q
+      - name: engine-switch throughput queries
+        # Same Prometheus image as the optional Compose agent; no Go dependency.
+        run: >-
+          docker run --rm --network none --entrypoint /bin/promtool
+          -v "$PWD/internal/discovery/testdata:/tests:ro"
+          prom/prometheus:v3.14.0 test rules /tests/rates.test.yml
       - name: build the image and run it
         # The exact runtime stage production uses. It is shell-less, so run it:
         # --version, then serve a real registration written by the host binary.

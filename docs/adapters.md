@@ -8,6 +8,11 @@ pin each row against a fixture ([`../testdata/README.md`](../testdata/README.md)
 "—" means the engine does not export it, so the exporter emits nothing.
 Absent is "not measured", never zero.
 
+Automatic selection for the three HTTP adapters uses the signatures and model
+evidence in [discovery](discovery.md#evidence-identity-and-availability). It
+reuses these mappings unchanged; pinned and log adapters retain their existing
+configuration. Captured-signature tests are in `internal/engines/detect_test.go`.
+
 **Clock** is `request` (each request's own interval, summed over requests) or
 `engine` (engine wall time, no double counting). See `design.md`, *Two clocks*.
 

@@ -5,6 +5,12 @@ section as the notes and refuses a version without one.
 
 ## 0.1.0 (unreleased)
 
+- Default continuous local engine discovery: vLLM, llama.cpp and SGLang follow
+  engine/model/port changes without exporter reconfiguration. Preserve explicit
+  pins, expose discovery diagnostics and transition timestamps, leave topology
+  unknown unless asserted, and document guarded rate queries. See issue #13
+  and [discovery](discovery.md) for limits and migration.
+
 - Optional built-in Remote Write 1.0 sender with a bounded persistent queue,
   ordered replay, retries, staleness, TLS/bearer authentication, and JSON status.
 - Preserve worker reset boundaries and per-worker cache ratios; reject ambiguous

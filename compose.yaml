@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
     # Host networking: registrations name engines as http://127.0.0.1:<port>,
     # which must mean the host, and the harness reads :9109 over the LAN.
-    # It also gives the container the host's hostname, the host label.
+    # Set LLM_EXPORTER_HOST explicitly: networking does not share a hostname.
     network_mode: host
     environment:
       # Empty means the host's short hostname.
@@ -30,6 +30,9 @@ services:
       - serve
       - --registration-dir=/registrations
       - --listen=${LLM_EXPORTER_LISTEN:-:9109}
+      - --discovery=${LLM_EXPORTER_DISCOVERY:-local}
+      - --discovery-nodes=${LLM_EXPORTER_DISCOVERY_NODES:-0}
+      - --discovery-endpoints=${LLM_EXPORTER_DISCOVERY_ENDPOINTS:-}
     volumes:
       - type: bind
         source: ${LLM_EXPORTER_REGISTRATION_DIR:-${HOME}/.local/state/llm-metrics-exporter/registrations}

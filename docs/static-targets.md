@@ -1,5 +1,9 @@
 # Static targets and measurement availability
 
+These are optional **pinned** targets. For no-configuration local engine/model
+switching use [automatic discovery](discovery.md), now the default. To collect
+only the registrations below, also pass `--discovery=off`.
+
 No benchmark harness or launcher integration is required. Create a directory
 of YAML registrations and run `llm-metrics-exporter serve --registration-dir
 <directory>`. The filename must match `backend`, for example `local-model.yaml`:
