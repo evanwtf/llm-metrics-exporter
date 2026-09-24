@@ -84,11 +84,11 @@ Automatic identity:
   for heterogeneous/changing topology or pins for per-deployment topology;
   a static assertion cannot automatically verify that topology changed.
 
-`llm_discovery_status{<identity>,state}` is 1 for the current state: `ready`,
+`llme_exporter_discovery_status{<identity>,state}` is 1 for the current state: `ready`,
 `discovering` (empty scope), `unavailable`, `unknown`, `unsupported`, `ambiguous`, `identity_missing`, or a
 scope/limit/deadline state above. Scope diagnostics use backend `auto-discovery`.
-`llm_engine_up` is 1 only for a successful identified adapter result. Token
-availability still uses `llm_metric_available`; readable telemetry need not
+`llme_engine_up` is 1 only for a successful identified adapter result. Token
+availability still uses `llme_exporter_metric_available`; readable telemetry need not
 provide every measurement. Missing values never become zero.
 
 After disappearance/read failure, last-known identity remains down, with no old
@@ -138,10 +138,10 @@ disappears. Use this engine-independent query unchanged through switches:
 
 ```promql
 sum by (host, phase) (
-  rate(llm_tokens_total[1m])
-  and on (engine, model, backend, host, nodes) (llm_engine_up == 1)
+  rate(llme_tokens_total[1m])
+  and on (engine, model, backend, host, nodes) (llme_engine_up == 1)
   unless on (engine, model, backend, host, nodes)
-    (time() - llm_discovery_changed_timestamp_seconds < 60)
+    (time() - llme_exporter_discovery_changed_timestamp_seconds < 60)
 )
 ```
 
@@ -153,7 +153,7 @@ backend in the aggregation if separate panels are desired. Existing plain rate
 queries still work but can retain old history or bridge a same-label replacement.
 Pinned targets have no discovery timestamp; their existing reset policy applies.
 
-`llm_discovery_changed_timestamp_seconds` advances on first observation,
+`llme_exporter_discovery_changed_timestamp_seconds` advances on first observation,
 engine/model change, listener generation change (Linux socket inode, macOS PID),
 upstream `process_start_time_seconds` change when available, or recovery from a
 failed collection. It is a gauge, not an unbounded identity label. Successful

@@ -74,7 +74,7 @@ set `--remote-write-dir` explicitly when isolating state.
 | HTTP path | Meaning |
 | --- | --- |
 | `/` | Version and endpoint summary |
-| `/metrics` | Canonical `llm_*` series only; no Go/process metrics |
+| `/metrics` | Canonical `llme_*` series only; no Go/process metrics |
 | `/healthz` | Process liveness (`ok`), not engine health or successful delivery |
 | `/remote-write/status` | Local delivery-status JSON; only with remote write enabled |
 

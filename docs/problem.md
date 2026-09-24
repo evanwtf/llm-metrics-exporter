@@ -52,7 +52,7 @@ The only record was a manual `curl` of the server's own `/metrics`.
 - A new arm needs **no change on the monitoring host**. It registers itself on
   its own host, and the exporter picks it up.
 - **A missing metric is loud.** A registered server that stops answering
-  exports `llm_engine_up 0`, which can alert.
+  exports `llme_engine_up 0`, which can alert.
 - Prefill and decode tok/s come from **counters**, with rates computed at query
   time, and are always reported separately.
 - The benchmark harness can read the same counters at the start and end of a

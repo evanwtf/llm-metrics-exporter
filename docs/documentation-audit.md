@@ -62,7 +62,7 @@ Each row accounts for distinct information in the original entry points.
 | Public repo: loopback/placeholders/documentation ranges; edits do not remove earlier publication; check before push | Retained root; expanded safe review in security |
 | Public repo: guard patterns, ordinary private names in ignored `.public-denylist`; strip fixture instance/job/paths | Retained root, security § Local files and publication checks; fixture sanitization also in testdata README |
 | Measurement: counters are truth, query-time rates, no v1 tok/s gauge; separate prefill/decode | Retained verbatim root measurement bullets |
-| Measurement: read failure must emit `llm_engine_up 0`, not drop series | Retained verbatim root |
+| Measurement: read failure must emit `llme_engine_up 0`, not drop series | Retained verbatim root |
 | Measurement: every series engine/model, operator requirement, schema and full-scrape tests, no runtime/process metrics | Retained verbatim root |
 | Measurement: never guess model; registration authoritative, upstream validates | Retained verbatim root |
 | Measurement: same interval for same canonical name; document upstream/clock/update timing; computed prefill not cache; separate clocks | Retained verbatim root; adapter task trigger retained |
@@ -90,7 +90,7 @@ Each row accounts for distinct information in the original entry points.
 | --- | --- |
 | design § Architecture: Agent-only diagram | Diagram retained and identified as original Agent topology; existing paragraph still describes all three current modes |
 | design § Metric schema: `<id>` list omits worker in shorthand | Explicit note clarifies worker on measurements without altering health/provenance identity; internal/metrics and Labels section |
-| design § Metric schema: cache-share query added cached rate to prefill rate without label matching | Added `ignoring (phase)` to the addition because only prefill has `phase`; schema supplies this evidence. Original denominator was `(rate(llm_prompt_cached_tokens_total[5m]) + rate(llm_tokens_total{phase="prefill"}[5m]))`, so mismatched label sets could yield no result. Numerator, 5m window and per-worker identity remain unchanged; no PromQL engine execution was performed |
+| design § Metric schema: cache-share query added cached rate to prefill rate without label matching | Added `ignoring (phase)` to the addition because only prefill has `phase`; schema supplies this evidence. Original denominator was `(rate(llme_prompt_cached_tokens_total[5m]) + rate(llme_tokens_total{phase="prefill"}[5m]))`, so mismatched label sets could yield no result. Numerator, 5m window and per-worker identity remain unchanged; no PromQL engine execution was performed |
 | design § Labels: nodes value “1 or 2” | Corrected to allowed 1–64; original fleet examples 1/2 and head-only two-node rationale retained. registration.Validate is authority |
 | design § Counter ownership: lists mlx-serve/MTPLX/Ollama as though built | Existing classification retained as planned where applicable; Ollama event-source choice remains unresolved, not newly decided |
 | design § Counter ownership: “no persisted counter state”; idle delta “is exact” | Clarified adapter counters versus durable remote-write queue/checkpoint, and requirement for reporting/catch-up completion. Original idle-only assertion was too broad: adapters documents SGLang interval lag; ds4 withholds backlog. Restart invalidates benchmark still required; rereading ds4 history is not new work |

@@ -55,11 +55,11 @@ curl -fsS "$PROMETHEUS_URL/api/v1/status/flags" |
 
 Expect `"true"`. A GET or JSON POST to `/api/v1/write` is not a delivery test:
 the endpoint requires Snappy-compressed protobuf. Verify actual delivery by
-querying `llm_tokens_total` and `llm_engine_up` after starting a sender.
+querying `llme_tokens_total` and `llme_engine_up` after starting a sender.
 
 Remote write does not create Prometheus's scrape-generated `up` series. Monitor
 arrival/freshness of the exporter series, and distinguish a disconnected laptop
-from a reachable exporter reporting `llm_engine_up 0`. No samples are collected
+from a reachable exporter reporting `llme_engine_up 0`. No samples are collected
 while a laptop is asleep or the exporter is stopped.
 
 Do not also scrape the same exporter into this Prometheus unless you deliberately
@@ -144,7 +144,7 @@ curl -fsS http://127.0.0.1:9109/remote-write/status | jq .
 
 This local JSON endpoint reports queued bytes/batches, dropped batches, last
 successful delivery time, and the latest error. It is separate from `/healthz`
-(process liveness) and `llm_engine_up` (engine collection health), and adds no
+(process liveness) and `llme_engine_up` (engine collection health), and adds no
 unlabeled global series to `/metrics`. The endpoint exists only when remote
 write is enabled. An empty queue and recent last success indicate delivery;
 backlog growing with a transport error indicates a receiver/connectivity issue.
@@ -153,10 +153,10 @@ On Prometheus, a named deployment that has not delivered any engine health
 observations for ten minutes can be detected with:
 
 ```promql
-absent_over_time(llm_engine_up{host="laptop-example",backend="local-model"}[10m])
+absent_over_time(llme_engine_up{host="laptop-example",backend="local-model"}[10m])
 ```
 
-Use `llm_engine_up == 0` for a sender that is reporting an unreadable engine.
+Use `llme_engine_up == 0` for a sender that is reporting an unreadable engine.
 Historical replay does not make old samples current; use sample timestamps
 and the receiver's query time when assessing freshness.
 

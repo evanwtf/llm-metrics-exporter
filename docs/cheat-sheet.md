@@ -91,17 +91,17 @@ liveness only; the next step verifies actual engine collection.
 
 ```bash
 curl -fsS --max-time 10 "$EXPORTER_URL/metrics" |
-  rg '^llm_(engine_up|registration_mismatch|exporter_scrape_errors_total|tokens_total|prompt_cached_tokens_total)\{'
+  rg '^llme_(engine_up|exporter_registration_mismatch|exporter_scrape_errors_total|tokens_total|prompt_cached_tokens_total)\{'
 ```
 
-Expect `llm_engine_up 1`, `llm_registration_mismatch 0`, and scrape errors `0`.
+Expect `llme_engine_up 1`, `llme_exporter_registration_mismatch 0`, and scrape errors `0`.
 Compare values using this mapping, selecting only the registered model upstream:
 
 | Exporter | vLLM source |
 |---|---|
-| `llm_tokens_total{phase="decode"}` | `vllm:generation_tokens_total` |
-| `llm_tokens_total{phase="prefill"}` | `vllm:prompt_tokens_by_source_total{source="local_compute"}` |
-| `llm_prompt_cached_tokens_total` | `vllm:prompt_tokens_cached_total` |
+| `llme_tokens_total{phase="decode"}` | `vllm:generation_tokens_total` |
+| `llme_tokens_total{phase="prefill"}` | `vllm:prompt_tokens_by_source_total{source="local_compute"}` |
+| `llme_prompt_cached_tokens_total` | `vllm:prompt_tokens_cached_total` |
 
 The exporter preserves data-parallel workers in the `worker` label. Compare
 matching workers, or sums at an idle instant. Exact equality between HTTP scrapes
@@ -176,8 +176,8 @@ registration bookkeeping. For permanent service installation, see the
 Once Prometheus scrapes the exporter, query the phases separately:
 
 ```promql
-sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="decode"}[1m]))
-sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="prefill"}[1m]))
+sum by (host, engine, model, backend) (rate(llme_tokens_total{phase="decode"}[1m]))
+sum by (host, engine, model, backend) (rate(llme_tokens_total{phase="prefill"}[1m]))
 ```
 
 These are tokens per wall-clock second over the query window. The raw counters

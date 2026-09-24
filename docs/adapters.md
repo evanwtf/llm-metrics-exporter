@@ -30,19 +30,19 @@ before calculating rates; worker resets and disappearances are independent.
 
 | canonical | source | clock | updates |
 |---|---|---|---|
-| `llm_tokens_total{phase="prefill"}` | `vllm:prompt_tokens_by_source_total{source="local_compute"}` | — | iteration |
-| `llm_tokens_total{phase="decode"}` | `vllm:generation_tokens_total` | — | iteration |
-| `llm_prompt_cached_tokens_total` | `vllm:prompt_tokens_cached_total` (local + external) | — | iteration |
-| `llm_request_phase_seconds_total{phase="prefill"}` | `vllm:request_prefill_time_seconds_sum`: first scheduled → first token | request | finish |
-| `llm_request_phase_seconds_total{phase="decode"}` | `vllm:request_decode_time_seconds_sum`: first token → last token | request | finish |
-| `llm_engine_phase_seconds_total` | — | | |
-| `llm_requests_total{status}` | `vllm:request_success_total{finished_reason}` | — | finish |
-| `llm_requests_running` | `vllm:num_requests_running` | — | iteration |
-| `llm_kv_cache_usage_ratio` | `vllm:kv_cache_usage_perc` (0..1 per worker; never summed) | — | iteration |
-| `llm_time_to_first_token_seconds` | `vllm:time_to_first_token_seconds` | request | first token |
-| `llm_spec_draft_tokens_total` | `vllm:spec_decode_num_draft_tokens_total` | — | iteration |
-| `llm_spec_accepted_tokens_total` | `vllm:spec_decode_num_accepted_tokens_total` | — | iteration |
-| `llm_spec_verify_steps_total` | `vllm:spec_decode_num_drafts_total` (one per request per step) | — | iteration |
+| `llme_tokens_total{phase="prefill"}` | `vllm:prompt_tokens_by_source_total{source="local_compute"}` | — | iteration |
+| `llme_tokens_total{phase="decode"}` | `vllm:generation_tokens_total` | — | iteration |
+| `llme_prompt_cached_tokens_total` | `vllm:prompt_tokens_cached_total` (local + external) | — | iteration |
+| `llme_request_phase_seconds_total{phase="prefill"}` | `vllm:request_prefill_time_seconds_sum`: first scheduled → first token | request | finish |
+| `llme_request_phase_seconds_total{phase="decode"}` | `vllm:request_decode_time_seconds_sum`: first token → last token | request | finish |
+| `llme_engine_phase_seconds_total` | — | | |
+| `llme_requests_total{status}` | `vllm:request_success_total{finished_reason}` | — | finish |
+| `llme_requests_running` | `vllm:num_requests_running` | — | iteration |
+| `llme_kv_cache_usage_ratio` | `vllm:kv_cache_usage_perc` (0..1 per worker; never summed) | — | iteration |
+| `llme_time_to_first_token_seconds` | `vllm:time_to_first_token_seconds` | request | first token |
+| `llme_spec_draft_tokens_total` | `vllm:spec_decode_num_draft_tokens_total` | — | iteration |
+| `llme_spec_accepted_tokens_total` | `vllm:spec_decode_num_accepted_tokens_total` | — | iteration |
+| `llme_spec_verify_steps_total` | `vllm:spec_decode_num_drafts_total` (one per request per step) | — | iteration |
 
 Notes:
 
@@ -63,19 +63,19 @@ The adapter detects upstream `decaf508b` (2026-08-13) by the presence of
 
 | canonical | source | clock | updates |
 |---|---|---|---|
-| `llm_tokens_total{phase="prefill"}` | `llamacpp:prompt_tokens_total` (excludes cache hits) | — | after: per batch; before: finish |
-| `llm_tokens_total{phase="decode"}` | `llamacpp:tokens_predicted_total` | — | finish (slot reset) |
-| `llm_prompt_cached_tokens_total` | `llamacpp:prompt_tokens_cached_total` (after only) | — | per batch |
-| `llm_engine_phase_seconds_total{phase="prefill"}` | `llamacpp:prompt_seconds_total`, **after** the rewrite: first queued prompt batch → synchronized output | engine | per batch |
-| `llm_request_phase_seconds_total{phase="prefill"}` | `llamacpp:prompt_seconds_total`, **before** the rewrite: per-slot sum | request | finish |
-| `llm_request_phase_seconds_total{phase="decode"}` | `llamacpp:tokens_predicted_seconds_total`: per-slot generation time | request | finish (slot reset) |
-| `llm_requests_total` | — | | |
-| `llm_requests_running` | `llamacpp:requests_processing` | — | per scrape |
-| `llm_kv_cache_usage_ratio` | — | | |
-| `llm_time_to_first_token_seconds` | — | | |
-| `llm_spec_draft_tokens_total` | `llamacpp:spec_decode_num_draft_tokens_total` | — | finish |
-| `llm_spec_accepted_tokens_total` | `llamacpp:spec_decode_num_accepted_tokens_total` | — | finish |
-| `llm_spec_verify_steps_total` | `llamacpp:spec_decode_num_drafts_total` ("verification steps") | — | finish |
+| `llme_tokens_total{phase="prefill"}` | `llamacpp:prompt_tokens_total` (excludes cache hits) | — | after: per batch; before: finish |
+| `llme_tokens_total{phase="decode"}` | `llamacpp:tokens_predicted_total` | — | finish (slot reset) |
+| `llme_prompt_cached_tokens_total` | `llamacpp:prompt_tokens_cached_total` (after only) | — | per batch |
+| `llme_engine_phase_seconds_total{phase="prefill"}` | `llamacpp:prompt_seconds_total`, **after** the rewrite: first queued prompt batch → synchronized output | engine | per batch |
+| `llme_request_phase_seconds_total{phase="prefill"}` | `llamacpp:prompt_seconds_total`, **before** the rewrite: per-slot sum | request | finish |
+| `llme_request_phase_seconds_total{phase="decode"}` | `llamacpp:tokens_predicted_seconds_total`: per-slot generation time | request | finish (slot reset) |
+| `llme_requests_total` | — | | |
+| `llme_requests_running` | `llamacpp:requests_processing` | — | per scrape |
+| `llme_kv_cache_usage_ratio` | — | | |
+| `llme_time_to_first_token_seconds` | — | | |
+| `llme_spec_draft_tokens_total` | `llamacpp:spec_decode_num_draft_tokens_total` | — | finish |
+| `llme_spec_accepted_tokens_total` | `llamacpp:spec_decode_num_accepted_tokens_total` | — | finish |
+| `llme_spec_verify_steps_total` | `llamacpp:spec_decode_num_drafts_total` ("verification steps") | — | finish |
 
 Notes:
 
@@ -93,16 +93,16 @@ batch) and preserve data-parallel ranks as `worker`.
 
 | canonical | source | clock | updates |
 |---|---|---|---|
-| `llm_tokens_total{phase="prefill"}` | `sglang:realtime_tokens_total{mode="prefill_compute"}` | — | interval |
-| `llm_tokens_total{phase="decode"}` | `sglang:realtime_tokens_total{mode="decode"}` | — | interval |
-| `llm_prompt_cached_tokens_total` | `sglang:realtime_tokens_total{mode="prefill_cache"}` | — | interval |
-| `llm_request_phase_seconds_total` | — (no per-phase seconds counter) | | |
-| `llm_engine_phase_seconds_total` | — (`scheduler_stage_seconds_total{category="run_batch"}` mixes prefill and decode) | | |
-| `llm_requests_total` | — (`num_requests_total` has no finish reason) | | |
-| `llm_requests_running` | `sglang:num_running_reqs` | — | interval |
-| `llm_kv_cache_usage_ratio` | `sglang:token_usage`, per data-parallel worker | — | interval |
-| `llm_time_to_first_token_seconds` | `sglang:time_to_first_token_seconds`, both `is_streaming` values | request | first token |
-| `llm_spec_*` | — (acceptance is gauges only; see `design.md`, *Open decisions*) | | |
+| `llme_tokens_total{phase="prefill"}` | `sglang:realtime_tokens_total{mode="prefill_compute"}` | — | interval |
+| `llme_tokens_total{phase="decode"}` | `sglang:realtime_tokens_total{mode="decode"}` | — | interval |
+| `llme_prompt_cached_tokens_total` | `sglang:realtime_tokens_total{mode="prefill_cache"}` | — | interval |
+| `llme_request_phase_seconds_total` | — (no per-phase seconds counter) | | |
+| `llme_engine_phase_seconds_total` | — (`scheduler_stage_seconds_total{category="run_batch"}` mixes prefill and decode) | | |
+| `llme_requests_total` | — (`num_requests_total` has no finish reason) | | |
+| `llme_requests_running` | `sglang:num_running_reqs` | — | interval |
+| `llme_kv_cache_usage_ratio` | `sglang:token_usage`, per data-parallel worker | — | interval |
+| `llme_time_to_first_token_seconds` | `sglang:time_to_first_token_seconds`, both `is_streaming` values | request | first token |
+| `llme_spec_*` | — (acceptance is gauges only; see `design.md`, *Open decisions*) | | |
 
 Notes:
 
@@ -124,15 +124,15 @@ scrape), probes `GET /v1/models` so a stale log does not read as up, and
 resets its totals when the log shrinks or is replaced.
 
 If bytes remain unread after the per-scrape cap, counters are withheld and
-`llm_telemetry_backlog_bytes` reports the lag. On catch-up, totals include the
+`llme_exporter_telemetry_backlog_bytes` reports the lag. On catch-up, totals include the
 whole log; that observation establishes a baseline. Historical replay is not
 exported as a sequence of partial counter increments.
 
 | canonical | source | updates |
 |---|---|---|
-| `llm_spec_draft_tokens_total` | Qwen path: `drafted`; other paths: `drafted - 1` | line |
-| `llm_spec_accepted_tokens_total` | Qwen path: `accepted`; other paths: `committed - 1` | line |
-| `llm_spec_verify_steps_total` | cycle lines that proposed at least one token | line |
+| `llme_spec_draft_tokens_total` | Qwen path: `drafted`; other paths: `drafted - 1` | line |
+| `llme_spec_accepted_tokens_total` | Qwen path: `accepted`; other paths: `committed - 1` | line |
+| `llme_spec_verify_steps_total` | cycle lines that proposed at least one token | line |
 | everything else | — | |
 
 The formats, from ds4 source (`ds4.c` at `9ab70534`) and local-llm's

@@ -47,7 +47,7 @@ from these checkboxes.
 - [ ] local-llm: launchers call `llm-metrics-exporter register` at start and
       `deregister` at stop, including the two-node recipes. Separate issue in
       local-llm.
-- [ ] Alert: `llm_engine_up == 0` for 5 minutes; `llm_registration_invalid`;
+- [ ] Alert: `llme_engine_up == 0` for 5 minutes; `llme_exporter_registration_invalid`;
       `absent(up{job="llm-metrics-exporter"})`.
 - [ ] Verify the systemd unit with `systemd-analyze --user verify` on a Spark
       (not yet run).
@@ -70,7 +70,7 @@ from these checkboxes.
 ## Phase 5: retire the old scrape jobs
 
 - [ ] Remove the per-engine `vllm`, `llamacpp` and Ollama-exporter jobs from the
-      central config; point `dgx_metrics.py` at `llm_*`.
+      central config; point `dgx_metrics.py` at `llme_*`.
 
 ## Open questions to close with evidence
 
@@ -82,6 +82,6 @@ from these checkboxes.
 - [ ] **SGLang speculative counters**: is `spec_verify_calls_total` per request
       or per batch? If a counter of accepted tokens exists upstream, map it.
 - [ ] **SGLang pipeline parallelism**: which rank counts tokens.
-- [ ] **Stale registrations after a reboot** export `llm_engine_up 0` until
+- [ ] **Stale registrations after a reboot** export `llme_engine_up 0` until
       deregistered. Decide whether that is the wanted behavior once alerts exist.
 - [ ] **Lint**: add `staticcheck` to CI and pre-commit.

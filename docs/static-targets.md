@@ -35,9 +35,9 @@ cannot validate identity against upstream; registration remains authoritative.
 
 | Measurement | Meaning |
 |---|---|
-| `llm_tokens_total{phase="prefill"}` | Prompt tokens actually computed, excluding cache hits |
-| `llm_tokens_total{phase="decode"}` | Generated tokens reported by the engine |
-| `llm_prompt_cached_tokens_total` | Prompt tokens reused from cache |
+| `llme_tokens_total{phase="prefill"}` | Prompt tokens actually computed, excluding cache hits |
+| `llme_tokens_total{phase="decode"}` | Generated tokens reported by the engine |
+| `llme_prompt_cached_tokens_total` | Prompt tokens reused from cache |
 
 These measure engine work. Provider usage/billing input tokens are a separate
 concept: they may include cache hits, accounting adjustments, or work not
@@ -50,17 +50,17 @@ See [adapters.md](adapters.md) for upstream versions, supported measurements,
 and update timing. Query current availability independently from engine health:
 
 ```promql
-llm_metric_available{metric="llm_tokens_total",phase="prefill"}
-llm_metric_available{metric="llm_tokens_total",phase="decode"}
-llm_metric_available{metric="llm_prompt_cached_tokens_total",phase="none"}
+llme_exporter_metric_available{metric="llme_tokens_total",phase="prefill"}
+llme_exporter_metric_available{metric="llme_tokens_total",phase="decode"}
+llme_exporter_metric_available{metric="llme_prompt_cached_tokens_total",phase="none"}
 ```
 
 `1` means at least one valid worker sample was supplied on this collection,
 including a genuine zero. `0` means unavailable (unsupported, not initialized,
 backlogged, or collection failed); it does not claim the underlying count is
-zero. `llm_engine_up` distinguishes failed reads from readable telemetry with
+zero. `llme_engine_up` distinguishes failed reads from readable telemetry with
 missing measurements. Inspect worker series separately if you need completeness
-across workers. `llm_telemetry_backlog_bytes` identifies log catch-up.
+across workers. `llme_exporter_telemetry_backlog_bytes` identifies log catch-up.
 
 Use direct scraping, built-in remote write, or a separate Prometheus Agent as
 appropriate. None is required to read `/metrics` locally.
