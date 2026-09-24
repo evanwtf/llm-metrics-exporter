@@ -1,5 +1,10 @@
 # The problem
 
+This records the original motivation and acceptance intent around the
+2026-09-22 incident. “Today” in the incident discussion is historical, not a
+claim that all those gaps remain. The generic-engine goal does not mean every
+adapter is implemented; current support is listed in the [README](../README.md).
+
 ## What we are trying to measure
 
 [local-llm](https://github.com/evanwtf/local-llm) asks which model + engine +

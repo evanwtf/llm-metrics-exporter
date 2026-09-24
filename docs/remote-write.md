@@ -88,6 +88,8 @@ the system trust store and verifies certificates; there is no insecure TLS
 switch. URL credentials, query strings, and redirects are rejected. Token
 values and receiver response bodies are not logged. Configure the server/proxy
 to accept the same authentication mechanism.
+Follow [credential handling](security.md) to obtain the file through a secret
+manager integration without putting token values in commands or this checkout.
 
 `job="llm-metrics-exporter"` and `instance=<host>` are added only to remote-write
 samples; the canonical identity and worker labels remain intact. Every process
@@ -177,6 +179,13 @@ LaunchAgent to apply the changes.
 
 For the Compose exporter, append these entries to its existing `command` and
 add a writable persistent volume (the image root filesystem may stay read-only):
+
+Provision the volume so the image's nonroot user can write it before starting
+the sender. Inference from `Dockerfile` and the sender's file writes: the named
+volume declaration alone does not establish suitable ownership/permissions.
+Check your runtime's volume provisioning; this example is not a permission-setup
+procedure. Keep registration mounts read-only and token files privately readable
+by the service user.
 
 ```yaml
 services:

@@ -3,7 +3,9 @@
 Every adapter is tested against real output from its engine (`AGENTS.md`).
 Each fixture is listed here with where it came from and the engine version.
 Nothing in this tree may identify a host: strip `instance`, `job` and any
-address before adding a file.
+address or path before adding a file. “Unchanged” below means unchanged
+measurements apart from this mandatory sanitization; it does not permit
+publishing private identities from live output.
 
 Three kinds of provenance:
 
