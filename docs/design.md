@@ -37,8 +37,10 @@ central Prometheus  ──►  Grafana, and the benchmark harness
   sees load phases and restarts too.
 - **No Pushgateway.** It suits batch jobs. For a host that is always on, it
   leaves stale series behind, and a stale tok/s is worse than a missing one.
-- **`remote_write`**, not central scraping. The host needs only an outbound
-  connection, and adding an arm needs no change on the monitoring host.
+- Delivery is configurable: direct scraping, the built-in remote-write sender,
+  or a separate Prometheus Agent. Outbound delivery needs only a connection to
+  the receiver, and adding an arm needs no monitoring-host change. See
+  [remote-write.md](remote-write.md) for buffering and receiver setup.
 
 ## Metric schema
 
@@ -73,6 +75,8 @@ llm_arm_info{<id>, issue, adapter_version, exporter_version} 1
 llm_exporter_scrape_errors_total{<id>}
 llm_exporter_last_success_timestamp_seconds{<id>}
 llm_registration_invalid{engine, model, host, file} 1    engine/model: the file's own, or "unknown"
+llm_telemetry_backlog_bytes{<id>}              unread log bytes; counters withheld until caught up
+llm_metric_available{<id>, metric, phase}      1 = valid token measurement present, 0 = unavailable
 ```
 
 **Every series carries `engine` and `model`** (operator requirement,
@@ -169,15 +173,26 @@ distinct series, or they are omitted with the reason documented.
 | `backend` | yes | the benchmark's backend name | two arms can share engine and model and differ only in flags. Without this their series merge |
 | `host` | yes | the host serving the API (`--host`, default: the short hostname) | where it ran |
 | `nodes` | yes | `1` or `2` | a two-node server exposes metrics on its head only, so the series has to say it spans two |
+| `worker` | engine measurements | upstream worker index, or `default` | preserves independent reset boundaries |
+
+Remote-write delivery adds `job="llm-metrics-exporter"` and `instance=<host>`.
+Local `/metrics` leaves those to a scraping Prometheus. Additional labels are
+`phase` on token/time series, `status` on request counts, `le` on histogram
+buckets, and `issue`, `adapter_version`, `exporter_version` on `llm_arm_info`.
+Availability has `metric` and `phase` (`none` for cached tokens). Invalid-file
+diagnostics have `engine`, `model`, `host`, `file`, without deployment labels.
 
 **No unbounded labels.** Quantization, context size, batch size, GPU type and
 the like go in an info-style series, not on every sample. `llm_arm_info` carries
 the registration's `issue`.
 
-**Engine-internal labels are aggregated away.** vLLM's `engine` (data-parallel
-index) is summed. SGLang reports per rank: the adapter keeps rank 0 of each
-tensor, pipeline and expert-parallel group, and sums data-parallel ranks, so a
-two-node tensor-parallel server is not counted twice.
+**Worker reset boundaries are preserved.** Adapter measurements carry `worker`:
+vLLM's `engine` index, SGLang's `dp_rank`, or `default` when unpartitioned.
+SGLang keeps rank 0 of tensor, pipeline and expert-parallel groups. Apply
+`rate()` per worker before summing. Histograms, phase seconds, and gauges retain
+the same worker boundary. Cache usage ratios are per worker, never summed.
+Absent workers disappear; reappearing workers expose their current counters.
+As with any sampled counter, resets entirely between observations can be missed.
 
 ## Adapters
 
@@ -237,11 +252,15 @@ trace_path: /path/to/jsonl # MTPLX only: MTPLX_DECODE_TRACE_JSONL
   samples the engine labels with that name. If there are none, the adapter
   exports `llm_registration_mismatch 1` and `llm_engine_up 0`, and logs the
   names the engine did report. It never relabels. If `served_model` is not set,
-  nothing is validated.
-- Each registration carries an internal **`run_id`**, which is not a Prometheus
+  a single model is accepted but multiple models are rejected as ambiguous.
+  An upstream without model labels cannot be validated.
+- Each registration can carry an internal **`run_id`**, which is not a Prometheus
   label. Writes are **atomic** (write a temp file, then rename). Deletion is
   **identity-aware**: a cleanup removes a file only if its `run_id` matches, so a
   late stop cannot delete a newer arm's registration.
+- Static YAML may omit `run_id` (defaults to `static`) and `issue`. `backend`
+  is a deployment identifier, not necessarily a benchmark arm. See
+  [static targets](static-targets.md) for a launcher-free workflow.
 - **The binary writes them.** `llm-metrics-exporter register` and
   `llm-metrics-exporter deregister` implement the atomic write and the
   identity-aware delete, so a launcher in any language gets both by calling it.
@@ -258,6 +277,19 @@ on its most recent collection attempt**, not merely that the HTTP port answered.
 Anything else is `0`, with the labels intact, so a missing metric is visible and
 alertable instead of an empty panel. `llm_exporter_scrape_errors_total` and
 `llm_exporter_last_success_timestamp_seconds` say why and since when.
+
+`llm_metric_available{metric,phase}` distinguishes available token measurements
+from unavailable ones, independently of reachability. A measured zero is
+available. `llm_telemetry_backlog_bytes > 0` means a log reader is catching up;
+counters are withheld and last-success does not advance until it catches up.
+Use only caught-up observations as benchmark boundaries. A catch-up snapshot
+is a new baseline, not evidence that historical work happened just now.
+
+Only one Collect call can be in flight per deployment. A timed-out call that
+ignores cancellation prevents further calls until it returns. Replacement is
+deferred and exported as down; Close runs only after Collect returns. Shutdown
+does not wait for stuck I/O. A permanently blocked backend stays unavailable
+until the I/O finishes or the process restarts, without spawning more calls.
 
 A registration left behind by a crashed launcher or a reboot keeps exporting
 `llm_engine_up 0` until someone deregisters it. That is deliberate: the

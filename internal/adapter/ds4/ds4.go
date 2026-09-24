@@ -113,8 +113,14 @@ func (a *Adapter) Collect(ctx context.Context) (adapter.Result, error) {
 		return adapter.Result{}, err
 	}
 	if !a.seen {
+		if backlog := a.tail.Backlog(); backlog > 0 {
+			return adapter.Result{BacklogBytes: backlog}, nil
+		}
 		// Absent, not zero: without DS4_MTP_TIMING there is never a line.
 		return adapter.Result{}, nil
+	}
+	if backlog := a.tail.Backlog(); backlog > 0 {
+		return adapter.Result{BacklogBytes: backlog}, nil
 	}
 	return adapter.Result{Samples: []metrics.Sample{
 		{Def: &metrics.SpecDraftTokens, Value: float64(a.proposed)},

@@ -122,6 +122,9 @@ var (
 	}
 )
 
+var BacklogBytes = Def{Name: "llm_telemetry_backlog_bytes", Kind: Gauge, Identity: true, Help: "Unread telemetry bytes. Nonzero means counters are withheld until catch-up."}
+var MetricAvailable = Def{Name: "llm_metric_available", Kind: Gauge, Identity: true, Labels: []string{"metric", "phase"}, Help: "1 when this collection provides the named measurement, including measured zero; 0 when unavailable."}
+
 // Unknown is the label value for an engine or model a file does not state.
 const Unknown = "unknown"
 
@@ -137,6 +140,7 @@ func AdapterDefs() []Def {
 // ExporterDefs are the series only the exporter emits.
 func ExporterDefs() []Def {
 	return []Def{
+		BacklogBytes, MetricAvailable,
 		EngineUp, RegistrationMismatch, ArmInfo, ScrapeErrors, LastSuccess,
 		RegistrationInvalid,
 	}
@@ -148,7 +152,11 @@ func (d Def) AllLabels() []string {
 	if !d.Identity {
 		return d.Labels
 	}
-	return append(append([]string{}, IdentityLabels...), d.Labels...)
+	labels := append(append([]string{}, IdentityLabels...), d.Labels...)
+	if adapterNames[d.Name] {
+		labels = append(labels, "worker")
+	}
+	return labels
 }
 
 // Hist is a histogram snapshot with cumulative buckets keyed by upper bound.
@@ -161,6 +169,7 @@ type Hist struct {
 // Sample is one value an adapter reports. Labels are the values of
 // Def.Labels, in order; the collector adds the identity labels.
 type Sample struct {
+	Worker string
 	Def    *Def
 	Labels []string
 	Value  float64
@@ -240,5 +249,12 @@ func (s Sample) validateHist() error {
 
 // Key identifies the series a sample belongs to within one arm.
 func (s Sample) Key() string {
-	return s.Def.Name + "\x00" + strings.Join(s.Labels, "\x00")
+	return s.Def.Name + "\x00" + strings.Join(s.Labels, "\x00") + "\x00" + s.WorkerID()
+}
+
+func (s Sample) WorkerID() string {
+	if s.Worker == "" {
+		return "default"
+	}
+	return s.Worker
 }

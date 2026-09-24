@@ -84,7 +84,7 @@ func TestSelectModel(t *testing.T) {
 		t.Fatal(err)
 	}
 	m, err := SelectModel(fams, "a_total", "model_name", "")
-	if err != nil || m != nil {
+	if !errors.Is(err, ErrModelMismatch) || m != nil {
 		t.Fatalf("no served_model: m=%v err=%v", m != nil, err)
 	}
 	m, err = SelectModel(fams, "a_total", "model_name", "y")
@@ -111,6 +111,17 @@ func TestSelectModelWithoutALabel(t *testing.T) {
 	m, err := SelectModel(fams, "a_total", "model", "z")
 	if err != nil || m != nil {
 		t.Fatalf("m=%v err=%v", m != nil, err)
+	}
+}
+
+func TestSingleModelNeedsNoExplicitSelection(t *testing.T) {
+	fams, _ := promtext.Parse(strings.NewReader("a_total{model_name=\"x\"} 3\n"))
+	m, err := SelectModel(fams, "a_total", "model_name", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value, _ := fams.Sum("a_total", m); value != 3 {
+		t.Fatal("single-model alias not supported")
 	}
 }
 

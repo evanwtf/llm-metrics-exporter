@@ -18,6 +18,7 @@ type Reader struct {
 	info     os.FileInfo // the file the offset belongs to
 	partial  []byte      // an incomplete last line
 	skipping bool        // inside an over-long line, until its newline
+	backlog  int64
 }
 
 // New returns a Reader for path that starts at the beginning of the file.
@@ -65,8 +66,16 @@ func (r *Reader) Read(onReset func(), onLine func(line []byte)) error {
 			return err
 		}
 	}
+	latest, err := f.Stat()
+	if err != nil {
+		return err
+	}
+	r.backlog = max(0, latest.Size()-r.offset)
 	return nil
 }
+
+// Backlog reports unread bytes after the last successful Read.
+func (r *Reader) Backlog() int64 { return r.backlog }
 
 func (r *Reader) feed(chunk []byte, onLine func([]byte)) {
 	for len(chunk) > 0 {

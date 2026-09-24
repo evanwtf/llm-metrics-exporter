@@ -111,6 +111,9 @@ func Parse(body []byte, file string) (Registration, error) {
 	if err := dec.Decode(&extra); !errors.Is(err, io.EOF) {
 		return r, errors.New("more than one YAML document")
 	}
+	if r.RunID == "" {
+		r.RunID = "static"
+	}
 	if err := r.Validate(); err != nil {
 		return r, err
 	}
@@ -295,6 +298,9 @@ func Remove(dir, backend, runID string) error {
 	}
 	if err := yaml.Unmarshal(body, &head); err != nil {
 		return fmt.Errorf("%s: %w", path, err)
+	}
+	if head.RunID == "" {
+		head.RunID = "static"
 	}
 	if head.RunID != runID {
 		return fmt.Errorf("%s has run_id %q, not %q: %w", path, head.RunID, runID, ErrRunIDMismatch)

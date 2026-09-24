@@ -93,8 +93,10 @@ vllm:prompt_tokens_by_source_total{engine="1",model_name="m",source="local_compu
 	if err != nil {
 		t.Fatal(err)
 	}
-	at.Want(t, res.Samples, &metrics.Tokens, 77, metrics.Decode)
-	at.Want(t, res.Samples, &metrics.Tokens, 11, metrics.Prefill)
+	at.WantWorker(t, res.Samples, "0", &metrics.Tokens, 40, metrics.Decode)
+	at.WantWorker(t, res.Samples, "1", &metrics.Tokens, 37, metrics.Decode)
+	at.WantWorker(t, res.Samples, "0", &metrics.Tokens, 5, metrics.Prefill)
+	at.WantWorker(t, res.Samples, "1", &metrics.Tokens, 6, metrics.Prefill)
 }
 
 // An older vLLM without prompt_tokens_by_source must not fall back to

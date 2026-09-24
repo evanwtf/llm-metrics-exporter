@@ -13,7 +13,7 @@ import (
 // Info registers the adapter.
 var Info = adapter.Info{
 	Engine:  "vllm",
-	Version: "1",
+	Version: "2",
 	New: func(c adapter.Config) adapter.Adapter {
 		return &adapter.Pull{Config: c, Map: Map}
 	},
@@ -21,7 +21,7 @@ var Info = adapter.Info{
 
 // Map turns a vLLM exposition into canonical samples. Series carry
 // model_name, which validates served_model, and engine (the data-parallel
-// index), which is summed.
+// index), which is preserved as worker to retain reset boundaries.
 func Map(fams promtext.Families, served string) (adapter.Result, error) {
 	if !fams.Has("vllm:generation_tokens_total") {
 		return adapter.Result{}, errors.New("no vllm:generation_tokens_total: not a vLLM /metrics body")
@@ -30,7 +30,7 @@ func Map(fams promtext.Families, served string) (adapter.Result, error) {
 	if err != nil {
 		return adapter.Result{}, err
 	}
-	b := adapter.NewBuilder(fams, model)
+	b := adapter.NewWorkerBuilder(fams, model, "engine")
 
 	// Tokens. prompt_tokens_total includes cache hits, so prefill reads the
 	// computed source only. There is no fallback: an older vLLM without

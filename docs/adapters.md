@@ -15,11 +15,13 @@ Absent is "not measured", never zero.
 step), `finish` (when a request completes), `interval` (on a timer), or
 `line` (when the log line is written).
 
-## vLLM (`vllm`, adapter version 1)
+## vLLM (`vllm`, adapter version 2)
 
 Checked against vLLM `0.29.1rc1.dev347`. Series are selected by
 `model_name` (validates `served_model`); the `engine` label (data-parallel
-index) is summed.
+index) is retained as `worker` on every measurement that carries it upstream.
+Unpartitioned measurements use `worker="default"`. Never sum raw worker counters
+before calculating rates; worker resets and disappearances are independent.
 
 | canonical | source | clock | updates |
 |---|---|---|---|
@@ -31,7 +33,7 @@ index) is summed.
 | `llm_engine_phase_seconds_total` | — | | |
 | `llm_requests_total{status}` | `vllm:request_success_total{finished_reason}` | — | finish |
 | `llm_requests_running` | `vllm:num_requests_running` | — | iteration |
-| `llm_kv_cache_usage_ratio` | `vllm:kv_cache_usage_perc` (already 0..1) | — | iteration |
+| `llm_kv_cache_usage_ratio` | `vllm:kv_cache_usage_perc` (0..1 per worker; never summed) | — | iteration |
 | `llm_time_to_first_token_seconds` | `vllm:time_to_first_token_seconds` | request | first token |
 | `llm_spec_draft_tokens_total` | `vllm:spec_decode_num_draft_tokens_total` | — | iteration |
 | `llm_spec_accepted_tokens_total` | `vllm:spec_decode_num_accepted_tokens_total` | — | iteration |
@@ -77,12 +79,12 @@ Notes:
 - Decode tokens and seconds move when a request finishes. Mid-request, a
   token delta from this adapter lags the engine.
 
-## SGLang (`sglang`, adapter version 1)
+## SGLang (`sglang`, adapter version 2)
 
 Checked live against the `lmsysorg/sglang` nightly dev cu13 image of
 2026-09-21. Series are selected by `model_name`. Scheduler series keep rank 0
 of each tensor, pipeline and expert-parallel group (those ranks share one
-batch) and sum data-parallel ranks.
+batch) and preserve data-parallel ranks as `worker`.
 
 | canonical | source | clock | updates |
 |---|---|---|---|
@@ -93,7 +95,7 @@ batch) and sum data-parallel ranks.
 | `llm_engine_phase_seconds_total` | — (`scheduler_stage_seconds_total{category="run_batch"}` mixes prefill and decode) | | |
 | `llm_requests_total` | — (`num_requests_total` has no finish reason) | | |
 | `llm_requests_running` | `sglang:num_running_reqs` | — | interval |
-| `llm_kv_cache_usage_ratio` | `sglang:token_usage`; omitted with more than one data-parallel rank | — | interval |
+| `llm_kv_cache_usage_ratio` | `sglang:token_usage`, per data-parallel worker | — | interval |
 | `llm_time_to_first_token_seconds` | `sglang:time_to_first_token_seconds`, both `is_streaming` values | request | first token |
 | `llm_spec_*` | — (acceptance is gauges only; see `design.md`, *Open decisions*) | | |
 
@@ -115,6 +117,11 @@ speculative cycle to stderr, and the launcher registers that log as
 `log_path`. The adapter reads new lines on each scrape (at most 32 MiB per
 scrape), probes `GET /v1/models` so a stale log does not read as up, and
 resets its totals when the log shrinks or is replaced.
+
+If bytes remain unread after the per-scrape cap, counters are withheld and
+`llm_telemetry_backlog_bytes` reports the lag. On catch-up, totals include the
+whole log; that observation establishes a baseline. Historical replay is not
+exported as a sequence of partial counter increments.
 
 | canonical | source | updates |
 |---|---|---|

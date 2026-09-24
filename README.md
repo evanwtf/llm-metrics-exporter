@@ -5,10 +5,12 @@ One Prometheus schema for LLM inference throughput, whatever engine is serving.
 Every inference host runs one exporter. Launchers register each model server
 ("arm") they start. The exporter reads each registered server in its own
 dialect (a native `/metrics` endpoint, or a log) and exposes the result under
-one set of canonical `llm_*` counters. Every series carries `engine`, `model`,
-`backend`, `host` and `nodes`. A Prometheus Agent on the same host scrapes it
-and `remote_write`s to a central Prometheus. Grafana and the benchmark harness
-both read the same counters.
+one set of canonical `llm_*` counters. Every per-deployment series carries
+`engine`, `model`, `backend`, `host` and `nodes`; measurements also carry `worker`
+to preserve independent resets. Static YAML targets work without a launcher.
+Deliver metrics through direct scraping, optional built-in remote write (with
+a persistent offline queue), or a separate Prometheus Agent. Grafana and the
+benchmark harness read the same counters.
 
 ## Bootstrap
 
@@ -90,6 +92,10 @@ hits are `llm_prompt_cached_tokens_total`. The full schema is in
 
 | doc | read it for |
 |---|---|
+| [`docs/static-targets.md`](docs/static-targets.md) | static deployments, token semantics, and measurement availability |
+| [`docs/remote-write.md`](docs/remote-write.md) | enable the Prometheus receiver for outbound delivery |
+| [`docs/prometheus-setup.md`](docs/prometheus-setup.md) | register vLLM, run the exporter as a service, and configure direct Prometheus scraping |
+| [`docs/cheat-sheet.md`](docs/cheat-sheet.md) | build and live-test against vLLM, verify token deltas, and clean up |
 | [`docs/problem.md`](docs/problem.md) | why this exists, and what "done" means |
 | [`docs/environment.md`](docs/environment.md) | the fleet, the engines, and the monitoring stack it plugs into |
 | [`docs/design.md`](docs/design.md) | architecture, metric schema, labels, adapters, registration |

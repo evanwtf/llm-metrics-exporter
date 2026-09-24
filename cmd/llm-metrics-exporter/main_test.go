@@ -113,7 +113,7 @@ func TestHandler(t *testing.T) {
 			t.Errorf("series without engine and model: %s", line)
 		}
 	}
-	if !strings.Contains(string(text), `llm_tokens_total{backend="tiny",engine="llamacpp",host="h1",model="smollm2-135m",nodes="1",phase="decode"} 224`) {
+	if !strings.Contains(string(text), `llm_tokens_total{backend="tiny",engine="llamacpp",host="h1",model="smollm2-135m",nodes="1",phase="decode",worker="default"} 224`) {
 		t.Errorf("decode tokens missing:\n%s", text)
 	}
 

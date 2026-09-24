@@ -41,7 +41,8 @@ type Config struct {
 
 // Result is one collection.
 type Result struct {
-	Samples []metrics.Sample
+	Samples      []metrics.Sample
+	BacklogBytes int64
 }
 
 // Info describes a compiled-in adapter.
@@ -70,14 +71,16 @@ func (e *MismatchError) Error() string {
 func (e *MismatchError) Unwrap() error { return ErrModelMismatch }
 
 // SelectModel returns the Match for the registered served_model, using label
-// on metric to find the names the engine reports. With no served_model, or an
-// engine that labels no model, it returns nil (select everything): there is
-// nothing to validate against.
+// on metric to find the names the engine reports. Without served_model,
+// multiple reported models are an error. Unlabeled engines cannot be validated.
 func SelectModel(fams promtext.Families, metric, label, served string) (promtext.Match, error) {
+	reported := fams.LabelValues(metric, label)
 	if served == "" {
+		if len(reported) > 1 {
+			return nil, fmt.Errorf("multiple upstream models %v: served_model is required: %w", reported, ErrModelMismatch)
+		}
 		return nil, nil
 	}
-	reported := fams.LabelValues(metric, label)
 	if len(reported) == 0 {
 		return nil, nil
 	}
@@ -137,10 +140,41 @@ func Probe(ctx context.Context, client *http.Client, endpoint, path string) erro
 // the model Match given to NewBuilder. A source series that is absent adds no
 // sample: absence is "not measured", never zero.
 type Builder struct {
-	fams    promtext.Families
-	model   promtext.Match
-	samples []metrics.Sample
-	errs    []error
+	fams        promtext.Families
+	model       promtext.Match
+	samples     []metrics.Sample
+	errs        []error
+	workerLabel string
+}
+
+// NewWorkerBuilder preserves independent worker reset boundaries. Empty
+// upstream worker labels use "default", meaning an unpartitioned source.
+func NewWorkerBuilder(fams promtext.Families, model promtext.Match, label string) *Builder {
+	b := NewBuilder(fams, model)
+	b.workerLabel = label
+	return b
+}
+
+func (b *Builder) each(source string, m promtext.Match, fn func(string, promtext.Match)) {
+	selected := promtext.AllOf(b.model, m)
+	workers := map[string]bool{}
+	for _, metric := range b.fams[source].GetMetric() {
+		labels := promtext.Labels(metric)
+		if selected(labels) {
+			workers[labels[b.workerLabel]] = true
+		}
+	}
+	for worker := range workers {
+		match := selected
+		if b.workerLabel != "" {
+			match = promtext.AllOf(selected, promtext.LabelIs(b.workerLabel, worker))
+		}
+		id := worker
+		if id == "" {
+			id = "default"
+		}
+		fn(id, match)
+	}
 }
 
 // NewBuilder starts a Builder over fams, selecting series with model.
@@ -150,33 +184,39 @@ func NewBuilder(fams promtext.Families, model promtext.Match) *Builder {
 
 // Value adds def from the sum of the selected series of source.
 func (b *Builder) Value(def *metrics.Def, labels []string, source string, m promtext.Match) {
-	if v, ok := b.fams.Sum(source, promtext.AllOf(b.model, m)); ok {
-		b.samples = append(b.samples, metrics.Sample{Def: def, Labels: labels, Value: v})
-	}
+	b.each(source, m, func(worker string, match promtext.Match) {
+		if v, ok := b.fams.Sum(source, match); ok {
+			b.samples = append(b.samples, metrics.Sample{Def: def, Labels: labels, Value: v, Worker: worker})
+		}
+	})
 }
 
 // HistogramSum adds def from the _sum of the selected histograms of source.
 func (b *Builder) HistogramSum(def *metrics.Def, labels []string, source string, m promtext.Match) {
-	h, ok, err := b.fams.Histogram(source, promtext.AllOf(b.model, m))
-	if err != nil {
-		b.errs = append(b.errs, err)
-		return
-	}
-	if ok {
-		b.samples = append(b.samples, metrics.Sample{Def: def, Labels: labels, Value: h.Sum})
-	}
+	b.each(source, m, func(worker string, match promtext.Match) {
+		h, ok, err := b.fams.Histogram(source, match)
+		if err != nil {
+			b.errs = append(b.errs, err)
+			return
+		}
+		if ok {
+			b.samples = append(b.samples, metrics.Sample{Def: def, Labels: labels, Value: h.Sum, Worker: worker})
+		}
+	})
 }
 
 // Histogram adds def as the sum of the selected histograms of source.
 func (b *Builder) Histogram(def *metrics.Def, source string, m promtext.Match) {
-	h, ok, err := b.fams.Histogram(source, promtext.AllOf(b.model, m))
-	if err != nil {
-		b.errs = append(b.errs, err)
-		return
-	}
-	if ok {
-		b.samples = append(b.samples, metrics.Sample{Def: def, Hist: &h})
-	}
+	b.each(source, m, func(worker string, match promtext.Match) {
+		h, ok, err := b.fams.Histogram(source, match)
+		if err != nil {
+			b.errs = append(b.errs, err)
+			return
+		}
+		if ok {
+			b.samples = append(b.samples, metrics.Sample{Def: def, Hist: &h, Worker: worker})
+		}
+	})
 }
 
 // Add appends a sample built elsewhere.

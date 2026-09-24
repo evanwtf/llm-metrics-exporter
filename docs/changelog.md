@@ -5,6 +5,13 @@ section as the notes and refuses a version without one.
 
 ## 0.1.0 (unreleased)
 
+- Optional built-in Remote Write 1.0 sender with a bounded persistent queue,
+  ordered replay, retries, staleness, TLS/bearer authentication, and JSON status.
+- Preserve worker reset boundaries and per-worker cache ratios; reject ambiguous
+  model selection. Bound in-flight collection and defer replacement/close safely.
+- Withhold log counters during catch-up and report backlog. Add token measurement
+  availability and static registrations with optional run IDs.
+
 The first build: one exporter per host, one schema for every engine.
 
 - **Schema.** Canonical `llm_*` counters with `engine`, `model`, `backend`,

@@ -70,10 +70,12 @@ sglang:token_usage{model_name="m",tp_rank="0",dp_rank="1"} 0.25
 	s := res.Samples
 	at.Valid(t, s)
 	at.Want(t, s, &metrics.Tokens, 100, metrics.Decode)
-	at.Want(t, s, &metrics.RequestsRunning, 5)
+	at.WantWorker(t, s, "0", &metrics.RequestsRunning, 2)
+	at.WantWorker(t, s, "1", &metrics.RequestsRunning, 3)
 	// Two data-parallel caches have no single usage ratio; adding them
 	// would read 0.75 of a cache that does not exist.
-	at.Absent(t, s, &metrics.KVCacheUsage)
+	at.WantWorker(t, s, "0", &metrics.KVCacheUsage, 0.5)
+	at.WantWorker(t, s, "1", &metrics.KVCacheUsage, 0.25)
 }
 
 func TestNotSGLang(t *testing.T) {

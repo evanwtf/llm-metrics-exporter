@@ -80,7 +80,18 @@ func Want(t *testing.T, samples []metrics.Sample, def *metrics.Def, want float64
 	}
 }
 
-// Absent fails the test if any sample of def exists.
+// WantWorker checks a measurement for one independent upstream worker.
+func WantWorker(t *testing.T, samples []metrics.Sample, worker string, def *metrics.Def, want float64, labels ...string) {
+	t.Helper()
+	var selected []metrics.Sample
+	for _, s := range samples {
+		if s.WorkerID() == worker {
+			selected = append(selected, s)
+		}
+	}
+	Want(t, selected, def, want, labels...)
+}
+
 func Absent(t *testing.T, samples []metrics.Sample, def *metrics.Def) {
 	t.Helper()
 	for _, s := range samples {

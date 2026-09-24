@@ -55,7 +55,6 @@ func TestParseRejects(t *testing.T) {
 		"version 2":           {replace("version: 1", "version: 2"), "qwen36dense.yaml"},
 		"unknown field":       {validYAML + "colour: blue\n", "qwen36dense.yaml"},
 		"typo of a field":     {replace("served_model", "servedmodel"), "qwen36dense.yaml"},
-		"no run_id":           {replace("run_id: r-1\n", ""), "qwen36dense.yaml"},
 		"unknown engine":      {replace("engine: vllm", "engine: tgi"), "qwen36dense.yaml"},
 		"no model":            {replace("model: qwen3.6-27b\n", ""), "qwen36dense.yaml"},
 		"model with space":    {replace("model: qwen3.6-27b", "model: qwen 3.6"), "qwen36dense.yaml"},

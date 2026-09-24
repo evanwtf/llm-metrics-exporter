@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
@@ -30,6 +31,7 @@ import (
 	"github.com/evanwtf/llm-metrics-exporter/internal/collector"
 	"github.com/evanwtf/llm-metrics-exporter/internal/engines"
 	"github.com/evanwtf/llm-metrics-exporter/internal/registration"
+	"github.com/evanwtf/llm-metrics-exporter/internal/remotewrite"
 	"github.com/evanwtf/llm-metrics-exporter/internal/version"
 )
 
@@ -121,27 +123,63 @@ func serve(args []string, out io.Writer) int {
 	fl := flag.NewFlagSet("serve", flag.ContinueOnError)
 	fl.SetOutput(out)
 	var cfg serveConfig
+	var rw remotewrite.Options
 	fl.StringVar(&cfg.listen, "listen", defaultListen, "address to serve /metrics on")
 	fl.StringVar(&cfg.dir, "registration-dir", registration.DefaultDir(), "directory of arm registrations")
 	fl.StringVar(&cfg.host, "host", defaultHost(), "value of the host label (default $LLM_EXPORTER_HOST, else the short hostname)")
 	fl.DurationVar(&cfg.timeout, "timeout", defaultTimeout, "per-arm collection timeout; keep it below the scrape timeout")
+	fl.StringVar(&rw.URL, "remote-write-url", "", "optional Prometheus receiver URL, ending /api/v1/write")
+	fl.StringVar(&rw.Dir, "remote-write-dir", filepath.Join(filepath.Dir(registration.DefaultDir()), "remote-write"), "persistent remote-write queue directory")
+	fl.StringVar(&rw.TokenFile, "remote-write-token-file", "", "optional bearer token file (read on each send)")
+	fl.DurationVar(&rw.Interval, "remote-write-interval", 15*time.Second, "remote-write collection interval")
+	fl.DurationVar(&rw.Timeout, "remote-write-timeout", 5*time.Second, "remote-write HTTP timeout")
+	fl.DurationVar(&rw.MaxAge, "remote-write-max-age", 24*time.Hour, "discard queued samples older than this")
+	fl.Int64Var(&rw.MaxBytes, "remote-write-max-bytes", 64<<20, "maximum queued payload bytes; newest snapshot dropped when full")
 	level := fl.String("log-level", "info", "debug, info, warn or error")
 	if err := fl.Parse(args); err != nil {
 		return exitUsage
 	}
 	log := logger(out, *level)
 	slog.SetDefault(log)
+	if cfg.timeout <= 0 || cfg.host == "" {
+		log.Error("timeout must be positive and host nonempty")
+		return exitUsage
+	}
+	rw.Host, rw.Version = cfg.host, version.Version
+	if rw.URL != "" {
+		if err := rw.Validate(); err != nil {
+			log.Error("remote-write configuration", "err", err)
+			return exitUsage
+		}
+	}
 	if err := os.MkdirAll(cfg.dir, 0o755); err != nil {
 		log.Error("cannot create the registration directory", "dir", cfg.dir, "err", err)
 		return exitError
 	}
 
-	handler, closeCollector := newHandler(cfg, log)
+	handler, registry, closeCollector := newRegistryHandler(cfg, log)
 	defer closeCollector()
+	var sender *remotewrite.Sender
+	if rw.URL != "" {
+		var err error
+		sender, err = remotewrite.New(rw, registry, log)
+		if err != nil {
+			log.Error("remote-write initialization", "err", err)
+			return exitError
+		}
+		defer sender.Close()
+		handler.Handle("/remote-write/status", sender)
+	}
 	srv := &http.Server{Addr: cfg.listen, Handler: handler, ReadHeaderTimeout: 10 * time.Second}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+	if sender != nil {
+		rwctx, cancel := context.WithCancel(ctx)
+		done := make(chan struct{})
+		go func() { defer close(done); sender.Run(rwctx) }()
+		defer func() { cancel(); <-done }()
+	}
 	errc := make(chan error, 1)
 	go func() { errc <- srv.ListenAndServe() }()
 	log.Info("serving", append([]any{"listen", cfg.listen, "registration_dir", cfg.dir, "host", cfg.host}, versionAttrs()...)...)
@@ -166,6 +204,11 @@ func serve(args []string, out io.Writer) int {
 // no Go runtime or process series, because every exported series must carry
 // engine and model.
 func newHandler(cfg serveConfig, log *slog.Logger) (http.Handler, func()) {
+	h, _, closeFn := newRegistryHandler(cfg, log)
+	return h, closeFn
+}
+
+func newRegistryHandler(cfg serveConfig, log *slog.Logger) (*http.ServeMux, *prometheus.Registry, func()) {
 	c := collector.New(collector.Options{
 		Dir: cfg.dir, Host: cfg.host, Timeout: cfg.timeout,
 		Client: &http.Client{}, MaxBody: maxBody, MaxRead: maxRead,
@@ -189,7 +232,7 @@ func newHandler(cfg serveConfig, log *slog.Logger) (http.Handler, func()) {
 		}
 		fmt.Fprintf(w, "llm-metrics-exporter %s\n\n/metrics  canonical llm_* series\n/healthz  liveness\n", version.Version)
 	})
-	return mux, c.Close
+	return mux, reg, c.Close
 }
 
 func register(args []string, out io.Writer) int {
@@ -197,12 +240,12 @@ func register(args []string, out io.Writer) int {
 	fl.SetOutput(out)
 	dir := fl.String("registration-dir", registration.DefaultDir(), "directory of arm registrations")
 	r := registration.Registration{Version: registration.Version}
-	fl.StringVar(&r.RunID, "run-id", "", "opaque id of this launch; deregister needs the same value (required)")
+	fl.StringVar(&r.RunID, "run-id", "static", "opaque launch id; use a unique value for lifecycle-managed deployments")
 	fl.StringVar(&r.Engine, "engine", "", "one of "+strings.Join(registration.Engines, ", ")+" (required)")
 	fl.StringVar(&r.Endpoint, "endpoint", "", "engine base URL, e.g. http://127.0.0.1:<port> (required)")
-	fl.StringVar(&r.Model, "model", "", "benchmark model slug: the model label (required)")
-	fl.StringVar(&r.Backend, "backend", "", "benchmark backend name: the backend label and file name (required)")
-	fl.IntVar(&r.Nodes, "nodes", 0, "nodes the server spans (required)")
+	fl.StringVar(&r.Model, "model", "", "model identity label (required)")
+	fl.StringVar(&r.Backend, "backend", "", "deployment identifier: backend label and file name (required)")
+	fl.IntVar(&r.Nodes, "nodes", 1, "physical nodes the server spans")
 	fl.IntVar(&r.Issue, "issue", 0, "tracking issue number")
 	fl.StringVar(&r.ServedModel, "served-model", "", "model name the engine reports; enables validation")
 	fl.StringVar(&r.LogPath, "log-path", "", "absolute path of the ds4 log")

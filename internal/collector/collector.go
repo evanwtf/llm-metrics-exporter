@@ -42,11 +42,15 @@ type Collector struct {
 	descs    map[string]*prometheus.Desc
 	log      *slog.Logger
 
-	mu   sync.Mutex // one scrape at a time: log adapters are not re-entrant
-	arms map[string]*arm
+	mu      sync.Mutex // one scrape at a time: log adapters are not re-entrant
+	arms    map[string]*arm
+	retired map[string]*arm
 }
 
 type arm struct {
+	life        sync.Mutex
+	busy        bool
+	closed      bool
 	reg         registration.Registration
 	info        adapter.Info
 	ad          adapter.Adapter // nil when the engine has no adapter
@@ -63,6 +67,7 @@ func New(opts Options) *Collector {
 		descs:    map[string]*prometheus.Desc{},
 		log:      opts.Logger,
 		arms:     map[string]*arm{},
+		retired:  map[string]*arm{},
 	}
 	if c.log == nil {
 		c.log = slog.Default()
@@ -131,14 +136,42 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 // sync makes the arms match the registrations: a new run_id, or any changed
 // field, restarts the adapter; a registration that is gone closes it.
 func (c *Collector) sync(valid []registration.Registration) {
+	for key, old := range c.retired {
+		old.life.Lock()
+		busy := old.busy
+		old.life.Unlock()
+		if !busy {
+			delete(c.retired, key)
+		}
+	}
 	seen := map[string]bool{}
 	for _, r := range valid {
 		seen[r.Backend] = true
+		if old := c.retired[r.Backend]; old != nil {
+			old.life.Lock()
+			busy := old.busy
+			old.life.Unlock()
+			if busy {
+				c.arms[r.Backend] = &arm{reg: r, closed: true}
+				continue
+			}
+			delete(c.retired, r.Backend)
+		}
 		if old, ok := c.arms[r.Backend]; ok {
-			if old.reg == r {
+			old.life.Lock()
+			closed := old.closed
+			old.life.Unlock()
+			if old.reg == r && !closed {
 				continue
 			}
 			c.closeArm(old)
+			old.life.Lock()
+			busy := old.busy
+			old.life.Unlock()
+			if busy {
+				c.arms[r.Backend] = &arm{reg: r, closed: true}
+				continue
+			}
 		}
 		a := &arm{reg: r}
 		if info, ok := c.adapters[r.Engine]; ok {
@@ -169,6 +202,16 @@ func (c *Collector) sync(valid []registration.Registration) {
 }
 
 func (c *Collector) closeArm(a *arm) {
+	a.life.Lock()
+	defer a.life.Unlock()
+	if a.closed {
+		return
+	}
+	a.closed = true
+	if a.busy {
+		c.retired[a.reg.Backend] = a
+		return
+	}
 	if a.ad != nil {
 		if err := a.ad.Close(); err != nil {
 			c.log.Warn("adapter close", "backend", a.reg.Backend, "err", err)
@@ -179,9 +222,17 @@ func (c *Collector) closeArm(a *arm) {
 var errNoAdapter = errors.New("this build has no adapter for the engine")
 
 func (c *Collector) collectArm(a *arm) (adapter.Result, error) {
+	a.life.Lock()
+	if a.busy || a.closed {
+		a.life.Unlock()
+		return adapter.Result{}, errors.New("previous collection still running or adapter retiring")
+	}
 	if a.ad == nil {
+		a.life.Unlock()
 		return adapter.Result{}, errNoAdapter
 	}
+	a.busy = true
+	a.life.Unlock()
 	ctx, cancel := context.WithTimeout(context.Background(), c.opts.Timeout)
 	defer cancel()
 	type ret struct {
@@ -191,6 +242,12 @@ func (c *Collector) collectArm(a *arm) (adapter.Result, error) {
 	done := make(chan ret, 1)
 	go func() {
 		res, err := a.ad.Collect(ctx)
+		a.life.Lock()
+		if a.closed {
+			_ = a.ad.Close()
+		}
+		a.busy = false
+		a.life.Unlock()
 		done <- ret{res, err}
 	}()
 	select {
@@ -218,7 +275,7 @@ func (c *Collector) report(ch chan<- prometheus.Metric, a *arm, res adapter.Resu
 			c.log.Warn("arm not readable", "backend", r.Backend, "engine", r.Engine, "err", msg)
 			a.lastErr = msg
 		}
-	} else {
+	} else if res.BacklogBytes == 0 {
 		a.lastSuccess = now
 		if a.lastErr != "" {
 			c.log.Info("arm readable again", "backend", r.Backend)
@@ -239,6 +296,21 @@ func (c *Collector) report(ch chan<- prometheus.Metric, a *arm, res adapter.Resu
 	c.emit(ch, &metrics.ArmInfo, 1, with(issue, version, c.opts.ExporterVersion)...)
 	c.emit(ch, &metrics.ScrapeErrors, a.errors, id...)
 	c.emit(ch, &metrics.LastSuccess, a.lastSuccess, id...)
+	c.emit(ch, &metrics.BacklogBytes, float64(res.BacklogBytes), id...)
+	for _, measurement := range []struct{ name, phase string }{
+		{metrics.Tokens.Name, metrics.Prefill}, {metrics.Tokens.Name, metrics.Decode},
+		{metrics.PromptCachedTokens.Name, "none"},
+	} {
+		available := 0.0
+		if err == nil && res.BacklogBytes == 0 {
+			for _, s := range res.Samples {
+				if s.Validate() == nil && s.Def.Name == measurement.name && (measurement.phase == "none" || len(s.Labels) > 0 && s.Labels[0] == measurement.phase) {
+					available = 1
+				}
+			}
+		}
+		c.emit(ch, &metrics.MetricAvailable, available, with(measurement.name, measurement.phase)...)
+	}
 	if err != nil {
 		return
 	}
@@ -255,6 +327,7 @@ func (c *Collector) report(ch chan<- prometheus.Metric, a *arm, res adapter.Resu
 		}
 		seen[s.Key()] = true
 		labels := with(s.Labels...)
+		labels = append(labels, s.WorkerID())
 		if s.Def.Kind == metrics.Histogram {
 			buckets := make(map[float64]uint64, len(s.Hist.Buckets))
 			for b, n := range s.Hist.Buckets {

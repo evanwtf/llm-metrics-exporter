@@ -14,7 +14,7 @@ import (
 // Info registers the adapter.
 var Info = adapter.Info{
 	Engine:  "sglang",
-	Version: "1",
+	Version: "2",
 	New: func(c adapter.Config) adapter.Adapter {
 		return &adapter.Pull{Config: c, Map: Map}
 	},
@@ -22,7 +22,7 @@ var Info = adapter.Info{
 
 // rankZero keeps one reporter per tensor, pipeline and expert-parallel group.
 // Those ranks share one batch, so adding them would count it again.
-// Data-parallel ranks (dp_rank) run different batches and are summed. A
+// Data-parallel ranks (dp_rank) run different batches and remain separate. A
 // label that is absent reads as "".
 var rankZero = promtext.AllOf(
 	promtext.LabelIn("tp_rank", "", "0"),
@@ -39,7 +39,7 @@ func Map(fams promtext.Families, served string) (adapter.Result, error) {
 	if err != nil {
 		return adapter.Result{}, err
 	}
-	b := adapter.NewBuilder(fams, promtext.AllOf(model, rankZero))
+	b := adapter.NewWorkerBuilder(fams, promtext.AllOf(model, rankZero), "dp_rank")
 
 	// All three token counters come from realtime_tokens_total, so they share
 	// one update rule (each scheduler log interval). prompt_tokens_total
@@ -51,10 +51,8 @@ func Map(fams promtext.Families, served string) (adapter.Result, error) {
 
 	b.Value(&metrics.RequestsRunning, nil, "sglang:num_running_reqs", nil)
 	// token_usage is one cache's used share. Data-parallel ranks each have
-	// their own cache, and no sum of ratios is a ratio, so omit it then.
-	if len(fams.LabelValues("sglang:token_usage", "dp_rank")) <= 1 {
-		b.Value(&metrics.KVCacheUsage, nil, "sglang:token_usage", nil)
-	}
+	// their own cache; retain their worker identity instead of summing ratios.
+	b.Value(&metrics.KVCacheUsage, nil, "sglang:token_usage", nil)
 	// Request series carry is_streaming; both halves share bucket bounds.
 	b.Histogram(&metrics.TimeToFirstToken, "sglang:time_to_first_token_seconds", nil)
 
