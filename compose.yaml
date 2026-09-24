@@ -1,7 +1,8 @@
 # llm-metrics-exporter on a Linux inference host.
 #
-#   cp .env.example .env            # optional overrides
-#   docker compose up -d            # the exporter alone
+#   cp .env.example .env            # edit engine settings and host UID/GID
+#   docker compose run --rm --build register  # one engine from .env
+#   docker compose up -d --build    # the exporter alone
 #   docker compose --profile agent up -d   # plus a Prometheus Agent (see below)
 #
 # On macOS run the binary natively instead (packaging/launchd).
@@ -24,7 +25,7 @@ services:
     # Set LLM_EXPORTER_HOST explicitly: networking does not share a hostname.
     network_mode: host
     environment:
-      # Empty means the host's short hostname.
+      # Empty means the container's short hostname; set a stable host identity.
       LLM_EXPORTER_HOST: ${LLM_EXPORTER_HOST:-}
     command:
       - serve
@@ -51,6 +52,40 @@ services:
       #   read_only: true
     # The host shares memory with the model (AGENTS.md, Footprint).
     mem_limit: 128m
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+
+  # Explicit one-shot setup. Not started by normal `up`; naming the service
+  # in `compose run` enables its profile automatically. The same binary writes
+  # registrations atomically; no shell/env-file parser is added to the image.
+  register:
+    profiles: [setup]
+    build:
+      context: .
+      args:
+        REVISION: ${REVISION:-unknown}
+    image: llm-metrics-exporter:local
+    user: "${LLM_EXPORTER_UID:-1000}:${LLM_EXPORTER_GID:-1000}"
+    command:
+      - register
+      - --registration-dir=/registrations
+      - --engine=${LLM_ENGINE:-vllm}
+      - --endpoint=${LLM_ENGINE_ENDPOINT:-}
+      - --model=${LLM_ENGINE_MODEL:-}
+      - --served-model=${LLM_ENGINE_SERVED_MODEL:-}
+      - --backend=${LLM_ENGINE_BACKEND:-local-model}
+      - --nodes=${LLM_ENGINE_NODES:-1}
+      - --run-id=${LLM_ENGINE_RUN_ID:-static}
+      - --issue=${LLM_ENGINE_ISSUE:-0}
+      - --log-path=${LLM_ENGINE_LOG_PATH:-}
+      - --trace-path=${LLM_ENGINE_TRACE_PATH:-}
+    volumes:
+      - type: bind
+        source: ${LLM_EXPORTER_REGISTRATION_DIR:-${HOME}/.local/state/llm-metrics-exporter/registrations}
+        target: /registrations
+        bind:
+          create_host_path: false
     read_only: true
     security_opt:
       - no-new-privileges:true

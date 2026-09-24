@@ -40,7 +40,9 @@ Set `LLM_EXPORTER_LISTEN=127.0.0.1:9109` for a loopback-only listener; the defau
 is all interfaces and has no TLS/authentication. Restrict access to trusted clients.
 The registration directory can be empty and is mounted read-only for optional
 pins. The nonroot image needs read/traverse access. macOS must use the native
-binary: Docker's VM does not see host loopback listeners.
+binary: Docker's VM does not see host loopback listeners. To pin one engine
+from `.env` instead, use the one-shot `register` service in
+[Compose settings](docs/compose.md).
 
 ## Confirm collection and switch engines
 

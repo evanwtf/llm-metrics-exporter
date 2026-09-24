@@ -80,7 +80,9 @@ set. For persistent overrides, use the ignored `.env` based on `.env.example`.
 The image runs as nonroot: it needs read/traverse access to the registration
 directory and files. Keep credentials out of registrations; see
 [private configuration](security.md). The initial build makes the binary
-available for registration; `up --build` can then reuse its cache.
+available for registration; `up --build` can then reuse its cache. For the
+same registration driven by `.env` (no exports), use the one-shot `register`
+service in [Compose settings](compose.md) with `LLM_EXPORTER_DISCOVERY=off`.
 
 ## 3. Confirm collection
 

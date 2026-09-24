@@ -90,3 +90,6 @@ The binary directly reads `LLM_EXPORTER_HOST` and `XDG_STATE_HOME`; the
 configuration/build inputs, not equivalent native CLI environment flags.
 The same is true of `LLM_EXPORTER_DISCOVERY`, `LLM_EXPORTER_DISCOVERY_NODES`
 and `LLM_EXPORTER_DISCOVERY_ENDPOINTS`.
+Compose also maps `LLM_ENGINE*` settings to the one-shot `register` service's
+CLI flags, and `LLM_EXPORTER_UID`/`LLM_EXPORTER_GID` to that service's user.
+The native binary does not load `.env`. See [Compose setup](compose.md).

@@ -1,5 +1,20 @@
 # Documentation reconciliation audit
 
+## Follow-up: Compose engine settings
+
+After source revision `a084ee903b59d329d4fd11fc3fce3727957796e5`, the Docker
+section of QUICKSTART was updated to `.env` plus a one-shot registration service.
+Its original export commands, UID/GID override, writable mount, build ordering,
+same-shell requirement and deregistration example are preserved in
+[Compose settings](compose.md#previous-manual-setup). Current setup/permissions,
+node/model selection, private-configuration rules, macOS caveat and verification
+steps remain in QUICKSTART. The template's earlier “every variable is optional”
+claim now distinguishes required engine setup fields from optional exporter
+settings. The Compose comment claiming host networking shares the host hostname
+was incorrect; current guidance requires a stable explicit host label.
+The counts and validation record below describe the original reconciliation,
+not this later feature change.
+
 ## Issue 13 implementation migration
 
 Source: `a084ee903b59d329d4fd11fc3fce3727957796e5` (main), clean before feature
