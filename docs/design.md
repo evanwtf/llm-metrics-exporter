@@ -50,49 +50,56 @@ central Prometheus  ──►  Grafana, and the benchmark harness
 
 Counters are canonical. Rates are computed in PromQL. `<id>` is the identity
 label set: `engine, model, backend, host, nodes` (see *Labels*).
+
+**Names.** `llme_` (LLM Metrics Exporter) is the namespace; it is distinct
+enough that a query for another tool's `llm_*` series cannot match it.
+Engine measurements, the series an adapter emits, are `llme_*`. The exporter's
+own state (registrations, discovery, collection health, availability) is
+`llme_exporter_*`, with one exception: `llme_engine_up`, the conventional
+`*_up` health series. `internal/metrics` enforces this split in a test.
 The schema shorthand below omits `worker` on engine measurements; those
 measurements also carry that label, as specified in *Labels*. Health and
 provenance series do not acquire worker identity by implication.
 
 ```
 # tokens
-llm_tokens_total{<id>, phase="prefill"}        prompt tokens the engine COMPUTED (cache hits excluded)
-llm_tokens_total{<id>, phase="decode"}         tokens generated
-llm_prompt_cached_tokens_total{<id>}           prompt tokens reused from a cache instead of computed
+llme_tokens_total{<id>, phase="prefill"}                 prompt tokens the engine COMPUTED (cache hits excluded)
+llme_tokens_total{<id>, phase="decode"}                  tokens generated
+llme_prompt_cached_tokens_total{<id>}                    prompt tokens reused from a cache instead of computed
 
 # time: two clocks, never mixed (see "Two clocks")
-llm_request_phase_seconds_total{<id>, phase}   sum of each request's own phase interval
-llm_engine_phase_seconds_total{<id>, phase}    engine wall time in the phase, no overlap
+llme_request_phase_seconds_total{<id>, phase}            sum of each request's own phase interval
+llme_engine_phase_seconds_total{<id>, phase}             engine wall time in the phase, no overlap
 
 # requests and state
-llm_requests_total{<id>, status}               finished requests, by finish reason
-llm_requests_running{<id>}
-llm_kv_cache_usage_ratio{<id>}                 0..1
-llm_time_to_first_token_seconds{<id>}          histogram, engine's own buckets
+llme_requests_total{<id>, status}                        finished requests, by finish reason
+llme_requests_running{<id>}
+llme_kv_cache_usage_ratio{<id>}                          0..1
+llme_time_to_first_token_seconds{<id>}                   histogram, engine's own buckets
 
 # speculative decoding, where the engine counts it
-llm_spec_draft_tokens_total{<id>}              draft tokens proposed (never the free first token)
-llm_spec_accepted_tokens_total{<id>}           draft tokens the target kept
-llm_spec_verify_steps_total{<id>}              verification steps that proposed at least one token
+llme_spec_draft_tokens_total{<id>}                       draft tokens proposed (never the free first token)
+llme_spec_accepted_tokens_total{<id>}                    draft tokens the target kept
+llme_spec_verify_steps_total{<id>}                       verification steps that proposed at least one token
 
 # health and provenance
-llm_engine_up{<id>}                            1 = telemetry obtained on the last attempt
-llm_registration_mismatch{<id>}                1 = engine serves a model other than the registered one
-llm_arm_info{<id>, issue, adapter_version, exporter_version} 1
-llm_exporter_scrape_errors_total{<id>}
-llm_exporter_last_success_timestamp_seconds{<id>}
-llm_registration_invalid{engine, model, host, file} 1    engine/model: the file's own, or "unknown"
-llm_telemetry_backlog_bytes{<id>}              unread log bytes; counters withheld until caught up
-llm_metric_available{<id>, metric, phase}      1 = valid token measurement present, 0 = unavailable
+llme_engine_up{<id>}                                     1 = telemetry obtained on the last attempt
+llme_exporter_registration_mismatch{<id>}                1 = engine serves a model other than the registered one
+llme_exporter_arm_info{<id>, issue, adapter_version, exporter_version} 1
+llme_exporter_scrape_errors_total{<id>}
+llme_exporter_last_success_timestamp_seconds{<id>}
+llme_exporter_registration_invalid{engine, model, host, file} 1    engine/model: the file's own, or "unknown"
+llme_exporter_telemetry_backlog_bytes{<id>}              unread log bytes; counters withheld until caught up
+llme_exporter_metric_available{<id>, metric, phase}      1 = valid token measurement present, 0 = unavailable
 
 # automatic discovery (see discovery.md)
-llm_discovery_status{<id>, state}              1 for the current discovery state
-llm_discovery_changed_timestamp_seconds{<id>}  last identity/listener/recovery transition; exclude rate windows crossing it
+llme_exporter_discovery_status{<id>, state}              1 for the current discovery state
+llme_exporter_discovery_changed_timestamp_seconds{<id>}  last identity/listener/recovery transition; exclude rate windows crossing it
 ```
 
 **Every series carries `engine` and `model`** (operator requirement,
 2026-09-22). So there is no exporter-wide series: the adapter and exporter
-versions ride on each arm's `llm_arm_info`, and `/metrics` has no Go runtime
+versions ride on each arm's `llme_exporter_arm_info`, and `/metrics` has no Go runtime
 or process series. `up{job="llm-metrics-exporter"}`, which the Prometheus
 Agent writes about the scrape itself, is the one series without them, and it
 is what says the exporter is down.
@@ -101,15 +108,15 @@ Queries:
 
 ```promql
 # decode tok/s, aggregate across concurrent requests
-sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="decode"}[1m]))
+sum by (host, engine, model, backend) (rate(llme_tokens_total{phase="decode"}[1m]))
 # prefill tok/s (computed tokens only)
-sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="prefill"}[1m]))
+sum by (host, engine, model, backend) (rate(llme_tokens_total{phase="prefill"}[1m]))
 # prefix-cache share of prompt tokens
-rate(llm_prompt_cached_tokens_total[5m])
-  / (rate(llm_prompt_cached_tokens_total[5m]) + ignoring (phase) rate(llm_tokens_total{phase="prefill"}[5m]))
+rate(llme_prompt_cached_tokens_total[5m])
+  / (rate(llme_prompt_cached_tokens_total[5m]) + ignoring (phase) rate(llme_tokens_total{phase="prefill"}[5m]))
 ```
 
-**No `llm_tokens_per_second` gauge in v1.** Two throughput values computed
+**No `llme_tokens_per_second` gauge in v1.** Two throughput values computed
 over different windows would disagree. Grafana uses `rate()`, and the harness
 uses counter deltas.
 
@@ -123,17 +130,17 @@ cached. Dividing all prompt tokens by prefill time overstates prefill speed by
 more than ten times.
 
 So `phase="prefill"` is **computed** tokens, on every engine, and cache hits go
-to `llm_prompt_cached_tokens_total`. Each adapter reads the engine's own
+to `llme_prompt_cached_tokens_total`. Each adapter reads the engine's own
 computed-token counter. No adapter derives it by subtraction.
 
 ### Two clocks
 
 An engine's phase time is one of two different intervals:
 
-- **Request clock** (`llm_request_phase_seconds_total`). Each request's own
+- **Request clock** (`llme_request_phase_seconds_total`). Each request's own
   interval, summed over requests. Two requests that overlap are both counted,
   so `Δtokens / Δseconds` is **per-stream** speed.
-- **Engine clock** (`llm_engine_phase_seconds_total`). Wall time the engine
+- **Engine clock** (`llme_engine_phase_seconds_total`). Wall time the engine
   spent in the phase. Overlap is counted once, so `Δtokens / Δseconds` is
   **aggregate** speed.
 
@@ -190,7 +197,7 @@ distinct series, or they are omitted with the reason documented.
 For automatic targets, the [discovery identity rules](discovery.md#evidence-identity-and-availability)
 extend this original pinned-label table: observed engine/model, hashed endpoint
 backend, and `nodes="unknown"` unless explicitly asserted. Discovery diagnostics
-add `state`; `llm_discovery_changed_timestamp_seconds` marks rate-window boundaries.
+add `state`; `llme_exporter_discovery_changed_timestamp_seconds` marks rate-window boundaries.
 
 | label | required | value | why |
 |---|---|---|---|
@@ -204,12 +211,12 @@ add `state`; `llm_discovery_changed_timestamp_seconds` marks rate-window boundar
 Remote-write delivery adds `job="llm-metrics-exporter"` and `instance=<host>`.
 Local `/metrics` leaves those to a scraping Prometheus. Additional labels are
 `phase` on token/time series, `status` on request counts, `le` on histogram
-buckets, and `issue`, `adapter_version`, `exporter_version` on `llm_arm_info`.
+buckets, and `issue`, `adapter_version`, `exporter_version` on `llme_exporter_arm_info`.
 Availability has `metric` and `phase` (`none` for cached tokens). Invalid-file
 diagnostics have `engine`, `model`, `host`, `file`, without deployment labels.
 
 **No unbounded labels.** Quantization, context size, batch size, GPU type and
-the like go in an info-style series, not on every sample. `llm_arm_info` carries
+the like go in an info-style series, not on every sample. `llme_exporter_arm_info` carries
 the registration's `issue`.
 
 **Worker reset boundaries are preserved.** Adapter measurements carry `worker`:
@@ -287,7 +294,7 @@ trace_path: /path/to/jsonl # MTPLX only: MTPLX_DECODE_TRACE_JSONL
 - **The registration is the authoritative identity.** `model` and `backend`
   labels come from it. If `served_model` is set, the adapter keeps only the
   samples the engine labels with that name. If there are none, the adapter
-  exports `llm_registration_mismatch 1` and `llm_engine_up 0`, and logs the
+  exports `llme_exporter_registration_mismatch 1` and `llme_engine_up 0`, and logs the
   names the engine did report. It never relabels. If `served_model` is not set,
   a single model is accepted but multiple models are rejected as ambiguous.
   An upstream without model labels cannot be validated.
@@ -303,21 +310,21 @@ trace_path: /path/to/jsonl # MTPLX only: MTPLX_DECODE_TRACE_JSONL
   identity-aware delete, so a launcher in any language gets both by calling it.
 
 The exporter re-reads the directory on every scrape. A file that does not parse
-or validate is logged and exported as `llm_registration_invalid`.
+or validate is logged and exported as `llme_exporter_registration_invalid`.
 A new `run_id` for a backend restarts that backend's adapter and its
 exporter-owned counters.
 
 ### Health
 
-`llm_engine_up 1` means **the exporter got telemetry from this identified engine
+`llme_engine_up 1` means **the exporter got telemetry from this identified engine
 on its most recent collection attempt**, not merely that the HTTP port answered.
 Anything else is `0`, with the labels intact, so a missing metric is visible and
-alertable instead of an empty panel. `llm_exporter_scrape_errors_total` and
-`llm_exporter_last_success_timestamp_seconds` say why and since when.
+alertable instead of an empty panel. `llme_exporter_scrape_errors_total` and
+`llme_exporter_last_success_timestamp_seconds` say why and since when.
 
-`llm_metric_available{metric,phase}` distinguishes available token measurements
+`llme_exporter_metric_available{metric,phase}` distinguishes available token measurements
 from unavailable ones, independently of reachability. A measured zero is
-available. `llm_telemetry_backlog_bytes > 0` means a log reader is catching up;
+available. `llme_exporter_telemetry_backlog_bytes > 0` means a log reader is catching up;
 counters are withheld and last-success does not advance until it catches up.
 Use only caught-up observations as benchmark boundaries. A catch-up snapshot
 is a new baseline, not evidence that historical work happened just now.
@@ -329,7 +336,7 @@ does not wait for stuck I/O. A permanently blocked backend stays unavailable
 until the I/O finishes or the process restarts, without spawning more calls.
 
 A registration left behind by a crashed launcher or a reboot keeps exporting
-`llm_engine_up 0` until someone deregisters it. That is deliberate: the
+`llme_engine_up 0` until someone deregisters it. That is deliberate: the
 exporter cannot tell "stopped on purpose" from "died".
 
 Automatic targets instead retain down health only for the bounded interval

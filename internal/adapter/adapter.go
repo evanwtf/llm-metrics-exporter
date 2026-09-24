@@ -21,7 +21,7 @@ import (
 type Adapter interface {
 	Start(ctx context.Context) error
 	// Collect returns canonical samples. An error means no telemetry was
-	// obtained on this attempt, and the arm exports llm_engine_up 0.
+	// obtained on this attempt, and the arm exports llme_engine_up 0.
 	Collect(ctx context.Context) (Result, error)
 	Close() error
 }
@@ -49,7 +49,7 @@ type Result struct {
 type Info struct {
 	Engine string
 	// Version changes when the adapter's mapping changes, so a change in
-	// meaning is visible in the data (llm_exporter_adapter_info).
+	// meaning is visible in the data (llme_exporter_arm_info).
 	Version string
 	New     func(Config) Adapter
 }

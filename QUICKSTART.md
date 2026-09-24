@@ -50,10 +50,10 @@ In another terminal (requires curl):
 
 ```sh
 curl -fsS --max-time 10 http://127.0.0.1:9109/metrics |
-  grep -E '^llm_(engine_up|discovery_status|metric_available|tokens_total|prompt_cached_tokens_total)\{'
+  grep -E '^llme_(engine_up|exporter_discovery_status|exporter_metric_available|tokens_total|prompt_cached_tokens_total)\{'
 ```
 
-An identified supported engine has `llm_engine_up 1`, `state="ready"`, its
+An identified supported engine has `llme_engine_up 1`, `state="ready"`, its
 observed engine/model labels, and available token counters. Idle counters can
 be zero or flat. Unavailable measurements are absent, not fabricated zeroes.
 Stop vLLM and start llama.cpp with metrics enabled; repeat the same curl.

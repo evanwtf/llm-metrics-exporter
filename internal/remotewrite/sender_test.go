@@ -26,7 +26,7 @@ func testOptions(t *testing.T, url string) Options {
 }
 func testRegistry() (*prometheus.Registry, prometheus.Counter) {
 	r := prometheus.NewRegistry()
-	c := prometheus.NewCounter(prometheus.CounterOpts{Name: "llm_tokens_total", ConstLabels: prometheus.Labels{"engine": "vllm", "model": "m", "phase": "decode"}})
+	c := prometheus.NewCounter(prometheus.CounterOpts{Name: "llme_tokens_total", ConstLabels: prometheus.Labels{"engine": "vllm", "model": "m", "phase": "decode"}})
 	r.MustRegister(c)
 	c.Add(7)
 	return r, c
@@ -231,7 +231,7 @@ func TestHTTPTimeoutAndToken(t *testing.T) {
 
 func TestHistogramAndStableIdentity(t *testing.T) {
 	reg := prometheus.NewRegistry()
-	h := prometheus.NewHistogram(prometheus.HistogramOpts{Name: "llm_time_to_first_token_seconds", Buckets: []float64{1, 2}, ConstLabels: prometheus.Labels{"engine": "vllm", "model": "m"}})
+	h := prometheus.NewHistogram(prometheus.HistogramOpts{Name: "llme_time_to_first_token_seconds", Buckets: []float64{1, 2}, ConstLabels: prometheus.Labels{"engine": "vllm", "model": "m"}})
 	reg.MustRegister(h)
 	h.Observe(0.5)
 	h.Observe(3)
@@ -262,7 +262,7 @@ func TestHistogramAndStableIdentity(t *testing.T) {
 			t.Fatal("timestamp changed")
 		}
 	}
-	want := map[string]float64{"llm_time_to_first_token_seconds_bucket1": 1, "llm_time_to_first_token_seconds_bucket2": 1, "llm_time_to_first_token_seconds_bucket+Inf": 2, "llm_time_to_first_token_seconds_count": 2, "llm_time_to_first_token_seconds_sum": 3.5}
+	want := map[string]float64{"llme_time_to_first_token_seconds_bucket1": 1, "llme_time_to_first_token_seconds_bucket2": 1, "llme_time_to_first_token_seconds_bucket+Inf": 2, "llme_time_to_first_token_seconds_count": 2, "llme_time_to_first_token_seconds_sum": 3.5}
 	if !reflect.DeepEqual(values, want) {
 		t.Fatalf("histogram %v", values)
 	}

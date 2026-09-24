@@ -286,7 +286,7 @@ func newRegistryHandler(cfg serveConfig, log *slog.Logger) (*http.ServeMux, *pro
 			http.NotFound(w, r)
 			return
 		}
-		fmt.Fprintf(w, "llm-metrics-exporter %s\n\n/metrics  canonical llm_* series\n/healthz  liveness\n", version.Version)
+		fmt.Fprintf(w, "llm-metrics-exporter %s\n\n/metrics  canonical llme_* series\n/healthz  liveness\n", version.Version)
 	})
 	return mux, reg, c.Close
 }

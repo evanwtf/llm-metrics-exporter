@@ -1,4 +1,4 @@
-// Package metrics is the canonical schema. Every llm_* name the exporter
+// Package metrics is the canonical schema. Every llme_* name the exporter
 // emits is defined here, and nowhere else.
 package metrics
 
@@ -44,47 +44,47 @@ const (
 // version of this block; docs/adapters.md says which engine fills which.
 var (
 	Tokens = Def{
-		Name: "llm_tokens_total", Kind: Counter, Identity: true, Labels: []string{"phase"},
+		Name: "llme_tokens_total", Kind: Counter, Identity: true, Labels: []string{"phase"},
 		Help: "Tokens processed. phase=prefill counts prompt tokens the engine computed, excluding cache hits; phase=decode counts generated tokens.",
 	}
 	PromptCachedTokens = Def{
-		Name: "llm_prompt_cached_tokens_total", Kind: Counter, Identity: true,
+		Name: "llme_prompt_cached_tokens_total", Kind: Counter, Identity: true,
 		Help: "Prompt tokens reused from a cache instead of computed.",
 	}
 	RequestPhaseSeconds = Def{
-		Name: "llm_request_phase_seconds_total", Kind: Counter, Identity: true, Labels: []string{"phase"},
+		Name: "llme_request_phase_seconds_total", Kind: Counter, Identity: true, Labels: []string{"phase"},
 		Help: "Request clock: each request's own phase interval, summed over requests. Overlapping requests are all counted.",
 	}
 	EnginePhaseSeconds = Def{
-		Name: "llm_engine_phase_seconds_total", Kind: Counter, Identity: true, Labels: []string{"phase"},
+		Name: "llme_engine_phase_seconds_total", Kind: Counter, Identity: true, Labels: []string{"phase"},
 		Help: "Engine clock: wall time the engine spent in the phase. Overlap is counted once.",
 	}
 	Requests = Def{
-		Name: "llm_requests_total", Kind: Counter, Identity: true, Labels: []string{"status"},
+		Name: "llme_requests_total", Kind: Counter, Identity: true, Labels: []string{"status"},
 		Help: "Finished requests, by the engine's finish reason.",
 	}
 	RequestsRunning = Def{
-		Name: "llm_requests_running", Kind: Gauge, Identity: true,
+		Name: "llme_requests_running", Kind: Gauge, Identity: true,
 		Help: "Requests the engine is processing now.",
 	}
 	KVCacheUsage = Def{
-		Name: "llm_kv_cache_usage_ratio", Kind: Gauge, Identity: true,
+		Name: "llme_kv_cache_usage_ratio", Kind: Gauge, Identity: true,
 		Help: "KV-cache usage, 0 to 1.",
 	}
 	TimeToFirstToken = Def{
-		Name: "llm_time_to_first_token_seconds", Kind: Histogram, Identity: true,
+		Name: "llme_time_to_first_token_seconds", Kind: Histogram, Identity: true,
 		Help: "Time to first token, in the engine's own buckets.",
 	}
 	SpecDraftTokens = Def{
-		Name: "llm_spec_draft_tokens_total", Kind: Counter, Identity: true,
+		Name: "llme_spec_draft_tokens_total", Kind: Counter, Identity: true,
 		Help: "Speculative draft tokens proposed. Never includes the free first token.",
 	}
 	SpecAcceptedTokens = Def{
-		Name: "llm_spec_accepted_tokens_total", Kind: Counter, Identity: true,
+		Name: "llme_spec_accepted_tokens_total", Kind: Counter, Identity: true,
 		Help: "Speculative draft tokens the target model kept.",
 	}
 	SpecVerifySteps = Def{
-		Name: "llm_spec_verify_steps_total", Kind: Counter, Identity: true,
+		Name: "llme_spec_verify_steps_total", Kind: Counter, Identity: true,
 		Help: "Speculative verification steps that proposed at least one token.",
 	}
 )
@@ -92,40 +92,40 @@ var (
 // Series that only the exporter emits.
 var (
 	EngineUp = Def{
-		Name: "llm_engine_up", Kind: Gauge, Identity: true,
+		Name: "llme_engine_up", Kind: Gauge, Identity: true,
 		Help: "1 if the exporter got telemetry from this identified engine on its last attempt, else 0.",
 	}
 	RegistrationMismatch = Def{
-		Name: "llm_registration_mismatch", Kind: Gauge, Identity: true,
+		Name: "llme_exporter_registration_mismatch", Kind: Gauge, Identity: true,
 		Help: "1 if the engine serves no model named served_model in the registration.",
 	}
 	ArmInfo = Def{
-		Name: "llm_arm_info", Kind: Gauge, Identity: true,
+		Name: "llme_exporter_arm_info", Kind: Gauge, Identity: true,
 		Labels: []string{"issue", "adapter_version", "exporter_version"},
 		Help:   "Registration and build metadata for this arm. adapter_version changes when the adapter's mapping changes. Always 1.",
 	}
 	ScrapeErrors = Def{
-		Name: "llm_exporter_scrape_errors_total", Kind: Counter, Identity: true,
+		Name: "llme_exporter_scrape_errors_total", Kind: Counter, Identity: true,
 		Help: "Failed collection attempts for this arm since its registration appeared.",
 	}
 	LastSuccess = Def{
-		Name: "llm_exporter_last_success_timestamp_seconds", Kind: Gauge, Identity: true,
+		Name: "llme_exporter_last_success_timestamp_seconds", Kind: Gauge, Identity: true,
 		Help: "Unix time of the last collection that got telemetry. 0 if none has.",
 	}
 	// RegistrationInvalid has no identity label set to borrow: the file did
 	// not validate. engine and model are the file's own values, or "unknown"
 	// when it has none, so the series still has both labels without a guess.
 	RegistrationInvalid = Def{
-		Name: "llm_registration_invalid", Kind: Gauge,
+		Name: "llme_exporter_registration_invalid", Kind: Gauge,
 		Labels: []string{"engine", "model", "host", "file"},
 		Help:   "1 for each registration file that did not parse or validate. Its arm is not measured.",
 	}
 )
 
-var BacklogBytes = Def{Name: "llm_telemetry_backlog_bytes", Kind: Gauge, Identity: true, Help: "Unread telemetry bytes. Nonzero means counters are withheld until catch-up."}
-var MetricAvailable = Def{Name: "llm_metric_available", Kind: Gauge, Identity: true, Labels: []string{"metric", "phase"}, Help: "1 when this collection provides the named measurement, including measured zero; 0 when unavailable."}
-var DiscoveryStatus = Def{Name: "llm_discovery_status", Kind: Gauge, Identity: true, Labels: []string{"state"}, Help: "Current automatic discovery state. Always 1 for the reported state."}
-var DiscoveryChanged = Def{Name: "llm_discovery_changed_timestamp_seconds", Kind: Gauge, Identity: true, Help: "Unix time of last observed identity, listener generation, or recovery transition. Exclude rate windows crossing this boundary."}
+var BacklogBytes = Def{Name: "llme_exporter_telemetry_backlog_bytes", Kind: Gauge, Identity: true, Help: "Unread telemetry bytes. Nonzero means counters are withheld until catch-up."}
+var MetricAvailable = Def{Name: "llme_exporter_metric_available", Kind: Gauge, Identity: true, Labels: []string{"metric", "phase"}, Help: "1 when this collection provides the named measurement, including measured zero; 0 when unavailable."}
+var DiscoveryStatus = Def{Name: "llme_exporter_discovery_status", Kind: Gauge, Identity: true, Labels: []string{"state"}, Help: "Current automatic discovery state. Always 1 for the reported state."}
+var DiscoveryChanged = Def{Name: "llme_exporter_discovery_changed_timestamp_seconds", Kind: Gauge, Identity: true, Help: "Unix time of last observed identity, listener generation, or recovery transition. Exclude rate windows crossing this boundary."}
 
 // Unknown is the label value for an engine or model a file does not state.
 const Unknown = "unknown"

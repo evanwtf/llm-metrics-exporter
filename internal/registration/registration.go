@@ -23,7 +23,7 @@ import (
 const Version = 1
 
 // Engines are the valid engine values. An engine here without an adapter is
-// still a valid registration: it exports llm_engine_up 0, which is louder than
+// still a valid registration: it exports llme_engine_up 0, which is louder than
 // rejecting the file.
 var Engines = []string{"vllm", "llamacpp", "sglang", "mlx-serve", "ollama", "ds4", "mtplx"}
 

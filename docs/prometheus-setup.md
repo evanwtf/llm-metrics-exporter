@@ -62,7 +62,7 @@ reads it locally. From another terminal:
 
 ```bash
 curl -fsS --max-time 10 http://127.0.0.1:9109/metrics |
-  rg '^llm_(engine_up|registration_mismatch|tokens_total|prompt_cached_tokens_total)\{'
+  rg '^llme_(engine_up|exporter_registration_mismatch|tokens_total|prompt_cached_tokens_total)\{'
 ```
 
 Expect engine up `1`, mismatch `0`, and decode/prefill counters when the
@@ -156,11 +156,11 @@ Then query:
 
 ```promql
 up{job="llm-metrics-exporter"}
-llm_engine_up{job="llm-metrics-exporter"}
-llm_tokens_total{job="llm-metrics-exporter"}
+llme_engine_up{job="llm-metrics-exporter"}
+llme_tokens_total{job="llm-metrics-exporter"}
 ```
 
-`up=1` means Prometheus scraped the exporter; `llm_engine_up=1` means the
+`up=1` means Prometheus scraped the exporter; `llme_engine_up=1` means the
 exporter read the registered engine. Both checks matter. No registrations can
 produce a successful scrape with no engine/token series.
 
@@ -168,16 +168,16 @@ After several scrapes, query throughput separately by phase:
 
 ```promql
 sum by (host, engine, model, backend) (
-  rate(llm_tokens_total{job="llm-metrics-exporter",phase="decode"}[1m])
+  rate(llme_tokens_total{job="llm-metrics-exporter",phase="decode"}[1m])
 )
 sum by (host, engine, model, backend) (
-  rate(llm_tokens_total{job="llm-metrics-exporter",phase="prefill"}[1m])
+  rate(llme_tokens_total{job="llm-metrics-exporter",phase="prefill"}[1m])
 )
 ```
 
 Prefill excludes cache hits; cached tokens are
-`llm_prompt_cached_tokens_total`. Idle counters yield zero throughput.
+`llme_prompt_cached_tokens_total`. Idle counters yield zero throughput.
 Keep existing native engine scrape jobs until dashboards are migrated; their
-`vllm:*`/`llamacpp:*` metric names differ from `llm_*`. Avoid collecting the same
+`vllm:*`/`llamacpp:*` metric names differ from `llme_*`. Avoid collecting the same
 exporter via both direct scraping and an Agent's remote write into the same
 destination unless you deliberately handle duplicate ingestion.

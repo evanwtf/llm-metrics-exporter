@@ -90,7 +90,7 @@ Run after either startup path (retry if the listener is still starting):
 
 ```sh
 curl -fsS --max-time 10 http://127.0.0.1:9109/metrics |
-  grep -E '^llm_(engine_up|registration_mismatch|metric_available|tokens_total|prompt_cached_tokens_total)\{'
+  grep -E '^llme_(engine_up|exporter_registration_mismatch|exporter_metric_available|tokens_total|prompt_cached_tokens_total)\{'
 ```
 
 For `backend="quickstart"`, expect engine up `1`, mismatch `0`, and token

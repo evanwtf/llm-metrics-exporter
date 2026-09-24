@@ -91,7 +91,7 @@ func TestDiscoveryRemoteWriteReplayKeepsOriginalIdentity(t *testing.T) {
 			for _, l := range ts.Labels {
 				labels[l.Name] = l.Value
 			}
-			if labels["__name__"] != "llm_tokens_total" || labels["phase"] != "decode" {
+			if labels["__name__"] != "llme_tokens_total" || labels["phase"] != "decode" {
 				continue
 			}
 			sample := ts.Samples[0]

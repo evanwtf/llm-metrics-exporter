@@ -102,7 +102,7 @@ This exporter feeds published benchmark numbers, so:
 - **Prefill and decode are always separate.** Never emit a single blended
   tok/s.
 - **Silence is a bug.** If a registered server cannot be read, export
-  `llm_engine_up 0`. Do not drop the series.
+  `llme_engine_up 0`. Do not drop the series.
 - **Every series carries `engine` and `model`** (operator requirement). A
   schema test and a full-scrape test enforce it. This is why `/metrics` has no
   Go runtime or process series.
@@ -129,7 +129,7 @@ This exporter feeds published benchmark numbers, so:
 
 The hosts share GPU and CPU memory. The exporter must stay small, hold no
 unbounded buffers, and never block on a slow engine: use a timeout on every
-read, and report the failure as `llm_engine_up 0`.
+read, and report the failure as `llme_engine_up 0`.
 
 This is a safety requirement, not a claim that all underlying I/O is cancellable.
 The [collector lifecycle rules](docs/design.md#health) bound in-flight work and
