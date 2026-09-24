@@ -81,3 +81,6 @@ The binary directly reads `LLM_EXPORTER_HOST` and `XDG_STATE_HOME`; the
 `LLM_EXPORTER_REGISTRATION_DIR`, `LLM_EXPORTER_LISTEN`, `REVISION` and
 `PROMETHEUS_AGENT_*` variables in [`.env.example`](../.env.example) are Compose
 configuration/build inputs, not equivalent native CLI environment flags.
+Compose also maps `LLM_ENGINE*` settings to the one-shot `register` service's
+CLI flags, and `LLM_EXPORTER_UID`/`LLM_EXPORTER_GID` to that service's user.
+The native binary does not load `.env`. See [Compose setup](compose.md).

@@ -57,6 +57,9 @@ trusted clients, or use `--listen 127.0.0.1:9109` for local-only operation.
 
 To run it as a service:
 
+- **Engine settings in `.env`:** use the [Docker quickstart](QUICKSTART.md#2b-docker-compose-linux)
+  and [Compose reference](docs/compose.md). `docker compose run --rm --build register`
+  reads engine settings from `.env`; no shell exports are needed.
 - **Linux, Docker:** `docker compose up -d` (see [`compose.yaml`](compose.yaml)).
   It uses host networking, so the `127.0.0.1` endpoints in registrations are the
   host's, and mounts the host's registration directory read-only. Create that

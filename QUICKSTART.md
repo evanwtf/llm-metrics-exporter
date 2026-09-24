@@ -7,6 +7,9 @@ Prometheus server is needed to see local token counts.
 
 ## 1. Point at your engine
 
+For Docker, skip directly to **2B** and put these settings in `.env` instead.
+For native execution:
+
 Replace the placeholders; keep real endpoints and model identities out of Git.
 The engine URL is its base URL, without `/metrics`:
 
@@ -45,35 +48,37 @@ For read-only cache/GOPATH problems, see [build troubleshooting](docs/cheat-shee
 
 Requires Docker with Compose; no host Go or Make installation is needed. Native
 execution is the supported path on macOS because Docker's VM cannot read host
-loopback engines. These commands use the checked-in Compose service and keep
-the exporter listener local-only:
+loopback engines. From the repository root:
 
 ```sh
-export LLM_EXPORTER_REGISTRATION_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/llm-metrics-exporter/registrations"
-export LLM_EXPORTER_HOST='inference-example' # choose a unique stable identity
-export LLM_EXPORTER_LISTEN='127.0.0.1:9109'
-mkdir -p "$LLM_EXPORTER_REGISTRATION_DIR"
-docker compose build exporter
+cp -n .env.example .env          # preserve an existing local .env
+id -u                          # put this value in LLM_EXPORTER_UID
+id -g                          # put this value in LLM_EXPORTER_GID
+```
 
-# One-shot registration: writable mount and your host UID/GID for this command.
-docker compose run --rm --no-deps --user "$(id -u):$(id -g)" \
-  --volume "$LLM_EXPORTER_REGISTRATION_DIR:/registrations:rw" \
-  exporter register --registration-dir /registrations \
-  --backend quickstart --engine vllm --endpoint "$ENGINE_URL" \
-  --model "$SERVED_MODEL" --served-model "$SERVED_MODEL" --nodes "$NODES" \
-  --run-id quickstart
+Edit `.env`: set `LLM_ENGINE_ENDPOINT`, `LLM_ENGINE_MODEL`, and
+`LLM_ENGINE_SERVED_MODEL` for your engine; set a unique stable
+`LLM_EXPORTER_HOST`. Set `LLM_EXPORTER_LISTEN=127.0.0.1:9109` for local-only
+access. Set UID/GID from the commands above. Adjust engine type and node count
+if needed. Then:
 
-# The long-running service keeps the normal read-only registration mount.
-docker compose up -d --build exporter
+```sh
+mkdir -p "$HOME/.local/state/llm-metrics-exporter/registrations"
+docker compose run --rm --build register &&
+  docker compose up -d --build exporter
 docker compose ps exporter
 ```
 
-Run subsequent Compose commands from this same shell so the overrides remain
-set. For persistent overrides, use the ignored `.env` based on `.env.example`.
-The image runs as nonroot: it needs read/traverse access to the registration
-directory and files. Keep credentials out of registrations; see
-[private configuration](docs/security.md). The initial build makes the binary
-available for registration; `up --build` can then reuse its cache.
+No exports, sourcing or engine flags are needed: Compose reads `.env` itself.
+If you set a custom registration directory, create that exact path instead.
+After editing engine settings, rerun the registration command; restarting the
+exporter alone does not apply engine edits. Defaults are backend `local-model`
+and run ID `static`. Changing backend leaves the old registration intact.
+Choose an unused backend if it already exists. The writer needs write access;
+the nonroot exporter needs read/traverse access and retains a read-only mount.
+See [Compose settings](docs/compose.md) for all options, custom directories,
+multiple targets, cleanup and the previous ad hoc shell workflow, and
+[private configuration](docs/security.md) for safe handling.
 
 ## 3. Confirm collection
 
@@ -84,7 +89,8 @@ curl -fsS --max-time 10 http://127.0.0.1:9109/metrics |
   grep -E '^llm_(engine_up|registration_mismatch|metric_available|tokens_total|prompt_cached_tokens_total)\{'
 ```
 
-For `backend="quickstart"`, expect engine up `1`, mismatch `0`, and token
+For your backend (`quickstart` natively, `local-model` by default with Compose),
+expect engine up `1`, mismatch `0`, and token
 counters where the engine supports them. Prefill counts computed tokens;
 cache hits are separate. Idle counters may be zero or flat. Missing prefill
 can mean unsupported upstream telemetry, not zero work. `/healthz` checks only
@@ -109,7 +115,12 @@ For the native path:
 ./dist/llm-metrics-exporter deregister --backend quickstart --run-id quickstart
 ```
 
-For Docker, reuse the one-shot `docker compose run` prefix above with
-`exporter deregister --registration-dir /registrations --backend quickstart
---run-id quickstart`, then `docker compose stop exporter` to stop that service.
+For Docker, use the backend/run ID you configured (defaults below):
+
+```sh
+docker compose run --rm register deregister --registration-dir /registrations \
+  --backend local-model --run-id static
+docker compose stop exporter
+```
+
 Deregistration only stops observation; it never stops the model server.
