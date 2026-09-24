@@ -1,7 +1,8 @@
 # Working in this repo
 
 These rules apply to people and agents alike. This is one Go application:
-one exporter per inference host observes registered engines through HTTP or
+one exporter per inference host discovers local HTTP engines or observes pinned
+registrations through HTTP or
 logs, exposes canonical Prometheus metrics, and optionally sends remote write.
 It does not launch models or implement provider billing. Four adapters are
 implemented; mlx-serve, MTPLX and Ollama remain planned.
@@ -22,6 +23,7 @@ within their scope. There is no universally required companion document.
 | Changing measurement, labels, queries or collector lifecycle | [Design](docs/design.md), [adapter semantics](docs/adapters.md) |
 | Adding/changing an adapter or fixture | [Adapters](docs/adapters.md), [findings](docs/findings.md), [fixture provenance](testdata/README.md) |
 | Changing registrations or CLI behavior | [CLI](docs/cli.md), [static targets](docs/static-targets.md) |
+| Changing discovery, identity transitions or rate windows | [Automatic discovery](docs/discovery.md) |
 | Operating vLLM or changing scrape/service instructions | [Quickstart](QUICKSTART.md), [Prometheus setup](docs/prometheus-setup.md); [cheat sheet](docs/cheat-sheet.md) for live measurements |
 | Changing remote-write delivery, queueing or receiver setup | [Remote write](docs/remote-write.md) |
 | Handling credentials, captures or publication hygiene | [Security](docs/security.md) |
@@ -111,8 +113,12 @@ This exporter feeds published benchmark numbers, so:
   source, clock and update timing for every series it emits, in
   `docs/adapters.md`. Prefill tokens are computed tokens, never cache hits;
   request-clock and engine-clock seconds are different names.
-- **Registration is identity.** Labels come from the registration file, and the
-  engine's own model name only validates it.
+- **Pins are authoritative; auto identity requires evidence.** Explicit
+  registrations retain their chosen labels and upstream validation. Automatic
+  targets must re-detect engine/model each collection, never guess topology or
+  splice identities, and yield to pins. Read [discovery](docs/discovery.md)
+  before changing these boundaries; it records the superseded registration-only
+  policy, scope and rate-window safeguards.
 - **A counter reset is not negative throughput.** Handle it explicitly.
 - Every adapter has tests against **captured real output** from that engine,
   checked in as fixtures, with the engine version it came from

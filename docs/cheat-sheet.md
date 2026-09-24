@@ -155,7 +155,7 @@ wait "$EXPORTER_PID"
 
 The built binary remains in `dist/`. The temporary directory retains only
 registration bookkeeping. For permanent service installation, see the
-[README](../README.md#bootstrap) and `packaging/` examples.
+[README](../README.md#pinned-bootstrap-optional) and `packaging/` examples.
 
 ## Troubleshooting and rates
 

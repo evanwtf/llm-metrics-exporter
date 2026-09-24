@@ -1,0 +1,50 @@
+# Synthetic timeseries, not a capture. One unchanged query across downtime,
+# engine change, and same-label vLLM reincarnation with a higher raw counter.
+evaluation_interval: 15s
+fuzzy_compare: true
+tests:
+  - interval: 15s
+    input_series:
+      - series: 'llm_tokens_total{engine="vllm",model="v",backend="auto-test",host="test",nodes="unknown",worker="0",phase="decode"}'
+        values: '0 15 30 45 60 stale _ _ _ _ _ _ 900 915 930 945 960'
+      - series: 'llm_engine_up{engine="vllm",model="v",backend="auto-test",host="test",nodes="unknown"}'
+        values: '1 1 1 1 1 0 stale _ _ _ _ _ 1 1 1 1 1'
+      - series: 'llm_discovery_changed_timestamp_seconds{engine="vllm",model="v",backend="auto-test",host="test",nodes="unknown"}'
+        values: '0 0 0 0 0 0 stale _ _ _ _ _ 180 180 180 180 180'
+      - series: 'llm_tokens_total{engine="llamacpp",model="l",backend="auto-test",host="test",nodes="unknown",worker="default",phase="decode"}'
+        values: '_ _ _ _ _ _ 0 15 30 45 60 75 stale _ _ _ _'
+      - series: 'llm_engine_up{engine="llamacpp",model="l",backend="auto-test",host="test",nodes="unknown"}'
+        values: '_ _ _ _ _ _ 1 1 1 1 1 1 stale _ _ _ _'
+      - series: 'llm_discovery_changed_timestamp_seconds{engine="llamacpp",model="l",backend="auto-test",host="test",nodes="unknown"}'
+        values: '_ _ _ _ _ _ 90 90 90 90 90 90 stale _ _ _ _'
+    promql_expr_test:
+      - expr: &throughput >-
+          sum by (host, phase) (
+            rate(llm_tokens_total[1m])
+            and on (engine, model, backend, host, nodes) (llm_engine_up == 1)
+            unless on (engine, model, backend, host, nodes)
+              (time() - llm_discovery_changed_timestamp_seconds < 60)
+          )
+        eval_time: 60s
+        exp_samples:
+          - labels: '{host="test",phase="decode"}'
+            value: 1
+      - expr: *throughput
+        eval_time: 75s
+        exp_samples: []
+      - expr: *throughput
+        eval_time: 90s
+        exp_samples: []
+      - expr: *throughput
+        eval_time: 150s
+        exp_samples:
+          - labels: '{host="test",phase="decode"}'
+            value: 1
+      - expr: *throughput
+        eval_time: 180s
+        exp_samples: []
+      - expr: *throughput
+        eval_time: 240s
+        exp_samples:
+          - labels: '{host="test",phase="decode"}'
+            value: 1

@@ -43,6 +43,9 @@ The `register` service has the `setup` profile, so ordinary `up` does not rerun
 it. An explicit `run register` activates it automatically. Do not enable the
 setup profile persistently. Existing launcher/static-YAML workflows still work
 without an `.env` engine definition or a registration setup run.
+Automatic discovery (`LLM_EXPORTER_DISCOVERY=local`, the default) needs none
+of these engine settings; a pin takes precedence over a discovered target on
+the same endpoint. Set `LLM_EXPORTER_DISCOVERY=off` for pins only.
 
 Set a stable, unique `LLM_EXPORTER_HOST`; host networking does not give a
 container the host's hostname. The listener defaults to `:9109` without TLS or
@@ -71,7 +74,8 @@ the backend in `.env` does not delete the old backend; explicitly deregister
 the old one if retiring it. One `.env` defines one setup target at a time;
 multiple engines can use separate private env files or normal registrations.
 `docker compose stop exporter` stops only the observer, not the engine, and
-leaves registrations intact.
+leaves registrations intact. With discovery enabled, a deregistered local
+engine becomes discoverable again; see [automatic discovery](discovery.md).
 
 For ds4, mount its log directory into the exporter at the same absolute path
 as `LLM_ENGINE_LOG_PATH` (see the comments in `compose.yaml`). Path flags do not

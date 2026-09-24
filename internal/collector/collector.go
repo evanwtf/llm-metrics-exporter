@@ -18,6 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter"
+	"github.com/evanwtf/llm-metrics-exporter/internal/discovery"
 	"github.com/evanwtf/llm-metrics-exporter/internal/metrics"
 	"github.com/evanwtf/llm-metrics-exporter/internal/registration"
 )
@@ -33,6 +34,7 @@ type Options struct {
 	Adapters        []adapter.Info
 	ExporterVersion string
 	Logger          *slog.Logger
+	Discovery       *discovery.Manager
 }
 
 // Collector implements prometheus.Collector.
@@ -42,9 +44,10 @@ type Collector struct {
 	descs    map[string]*prometheus.Desc
 	log      *slog.Logger
 
-	mu      sync.Mutex // one scrape at a time: log adapters are not re-entrant
-	arms    map[string]*arm
-	retired map[string]*arm
+	mu       sync.Mutex // one scrape at a time: log adapters are not re-entrant
+	arms     map[string]*arm
+	retired  map[string]*arm
+	autoArms map[string]*arm
 }
 
 type arm struct {
@@ -68,6 +71,7 @@ func New(opts Options) *Collector {
 		log:      opts.Logger,
 		arms:     map[string]*arm{},
 		retired:  map[string]*arm{},
+		autoArms: map[string]*arm{},
 	}
 	if c.log == nil {
 		c.log = slog.Default()
@@ -114,6 +118,14 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	results := make(map[string]outcome, len(c.arms))
 	var wg sync.WaitGroup
 	var rmu sync.Mutex
+	var observed []discovery.Observation
+	if c.opts.Discovery != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			observed = c.opts.Discovery.Observe(context.Background(), valid)
+		}()
+	}
 	for key, a := range c.arms {
 		wg.Add(1)
 		go func() {
@@ -130,6 +142,25 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 	for key, a := range c.arms {
 		out := results[key]
 		c.report(ch, a, out.res, out.err, now)
+	}
+	seenAuto := map[string]bool{}
+	for _, o := range observed {
+		r := o.Registration
+		seenAuto[r.Backend] = true
+		a := c.autoArms[r.Backend]
+		if a == nil || a.reg != r {
+			a = &arm{reg: r, info: adapter.Info{Version: o.Version}}
+			c.autoArms[r.Backend] = a
+		}
+		c.report(ch, a, o.Result, o.Err, now)
+		id := identity(r, c.opts.Host)
+		c.emit(ch, &metrics.DiscoveryStatus, 1, append(id, o.State)...)
+		c.emit(ch, &metrics.DiscoveryChanged, o.ChangedAt, id...)
+	}
+	for key := range c.autoArms {
+		if !seenAuto[key] {
+			delete(c.autoArms, key)
+		}
 	}
 }
 
@@ -259,9 +290,17 @@ func (c *Collector) collectArm(a *arm) (adapter.Result, error) {
 	}
 }
 
+func identity(r registration.Registration, host string) []string {
+	nodes := strconv.Itoa(r.Nodes)
+	if r.Nodes == 0 {
+		nodes = metrics.Unknown
+	}
+	return []string{r.Engine, r.Model, r.Backend, host, nodes}
+}
+
 func (c *Collector) report(ch chan<- prometheus.Metric, a *arm, res adapter.Result, err error, now float64) {
 	r := a.reg
-	id := []string{r.Engine, r.Model, r.Backend, c.opts.Host, strconv.Itoa(r.Nodes)}
+	id := identity(r, c.opts.Host)
 	with := func(extra ...string) []string { return append(append([]string{}, id...), extra...) }
 
 	up, mismatch := 1.0, 0.0

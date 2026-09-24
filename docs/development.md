@@ -76,6 +76,7 @@ source and report that they were not executed.
 | --- | --- |
 | Commands, flags, HTTP routes | [`main.go`](../cmd/llm-metrics-exporter/main.go), [CLI reference](cli.md) |
 | Compiled adapter set | [`internal/engines`](../internal/engines) |
+| Local listeners, engine detection and live identity | [`internal/discovery`](../internal/discovery), [discovery contract](discovery.md) |
 | Per-engine translation | [`internal/adapter`](../internal/adapter), [adapter semantics](adapters.md) |
 | Canonical names and labels | [`internal/metrics`](../internal/metrics), [schema](design.md#metric-schema) |
 | Collection and lifecycle | [`internal/collector`](../internal/collector) |

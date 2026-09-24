@@ -16,11 +16,13 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -29,6 +31,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/evanwtf/llm-metrics-exporter/internal/collector"
+	"github.com/evanwtf/llm-metrics-exporter/internal/discovery"
 	"github.com/evanwtf/llm-metrics-exporter/internal/engines"
 	"github.com/evanwtf/llm-metrics-exporter/internal/registration"
 	"github.com/evanwtf/llm-metrics-exporter/internal/remotewrite"
@@ -113,10 +116,47 @@ func shortHostname() string {
 }
 
 type serveConfig struct {
-	listen  string
-	dir     string
-	host    string
-	timeout time.Duration
+	listen             string
+	dir                string
+	host               string
+	timeout            time.Duration
+	discovery          string
+	discoveryEndpoints string
+	discoveryNodes     int
+}
+
+func (cfg serveConfig) discoveryOptions() (discovery.Options, error) {
+	o := discovery.Options{Timeout: cfg.timeout, Nodes: cfg.discoveryNodes}
+	if cfg.discovery != "local" && cfg.discovery != "off" && cfg.discovery != "" {
+		return o, errors.New("discovery must be local or off")
+	}
+	if cfg.discoveryNodes < 0 || cfg.discoveryNodes > 64 {
+		return o, errors.New("discovery-nodes must be 0 (unknown) or 1-64")
+	}
+	if cfg.discovery != "local" {
+		if cfg.discoveryEndpoints != "" {
+			return o, errors.New("discovery endpoints require local discovery")
+		}
+		return o, nil
+	}
+	_, port, err := net.SplitHostPort(cfg.listen)
+	numeric, portErr := strconv.Atoi(port)
+	if err != nil || portErr != nil || numeric < 1 || numeric > 65535 {
+		return o, errors.New("automatic discovery requires a fixed nonzero exporter listen port")
+	}
+	o.ExcludePort = strconv.Itoa(numeric)
+	if cfg.discoveryEndpoints != "" {
+		var targets []discovery.Target
+		for _, raw := range strings.Split(cfg.discoveryEndpoints, ",") {
+			t, err := discovery.LocalTarget(strings.TrimSpace(raw))
+			if err != nil {
+				return o, err
+			}
+			targets = append(targets, t)
+		}
+		o.Candidates = func(context.Context) ([]discovery.Target, error) { return targets, nil }
+	}
+	return o, nil
 }
 
 func serve(args []string, out io.Writer) int {
@@ -128,6 +168,9 @@ func serve(args []string, out io.Writer) int {
 	fl.StringVar(&cfg.dir, "registration-dir", registration.DefaultDir(), "directory of arm registrations")
 	fl.StringVar(&cfg.host, "host", defaultHost(), "value of the host label (default $LLM_EXPORTER_HOST, else the short hostname)")
 	fl.DurationVar(&cfg.timeout, "timeout", defaultTimeout, "per-arm collection timeout; keep it below the scrape timeout")
+	fl.StringVar(&cfg.discovery, "discovery", "local", "engine discovery: local or off (pinned registrations only)")
+	fl.StringVar(&cfg.discoveryEndpoints, "discovery-endpoints", "", "optional comma-separated loopback HTTP base URLs replacing local listener enumeration")
+	fl.IntVar(&cfg.discoveryNodes, "discovery-nodes", 0, "assert node count for all automatically discovered engines; 0 means unknown")
 	fl.StringVar(&rw.URL, "remote-write-url", "", "optional Prometheus receiver URL, ending /api/v1/write")
 	fl.StringVar(&rw.Dir, "remote-write-dir", filepath.Join(filepath.Dir(registration.DefaultDir()), "remote-write"), "persistent remote-write queue directory")
 	fl.StringVar(&rw.TokenFile, "remote-write-token-file", "", "optional bearer token file (read on each send)")
@@ -141,6 +184,10 @@ func serve(args []string, out io.Writer) int {
 	}
 	log := logger(out, *level)
 	slog.SetDefault(log)
+	if _, err := cfg.discoveryOptions(); err != nil {
+		log.Error("discovery configuration", "err", err)
+		return exitUsage
+	}
 	if cfg.timeout <= 0 || cfg.host == "" {
 		log.Error("timeout must be positive and host nonempty")
 		return exitUsage
@@ -209,10 +256,19 @@ func newHandler(cfg serveConfig, log *slog.Logger) (http.Handler, func()) {
 }
 
 func newRegistryHandler(cfg serveConfig, log *slog.Logger) (*http.ServeMux, *prometheus.Registry, func()) {
+	var auto *discovery.Manager
+	if cfg.discovery == "local" {
+		o, err := cfg.discoveryOptions()
+		if err != nil {
+			panic("invalid internally constructed discovery configuration")
+		}
+		auto = discovery.New(o)
+	}
 	c := collector.New(collector.Options{
 		Dir: cfg.dir, Host: cfg.host, Timeout: cfg.timeout,
 		Client: &http.Client{}, MaxBody: maxBody, MaxRead: maxRead,
 		Adapters: engines.All(), ExporterVersion: version.Version, Logger: log,
+		Discovery: auto,
 	})
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(c)

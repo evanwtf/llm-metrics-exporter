@@ -57,6 +57,13 @@ planned; registering them does not implement collection and reports engine down.
 | `--timeout` | `5s`, positive per-deployment collection timeout; below scrape timeout |
 | `--registration-dir` | State directory described above |
 | `--log-level` | `info` |
+| `--discovery` | `local` (continuous local discovery); `off` uses pins only |
+| `--discovery-endpoints` | Empty: enumerate listeners; otherwise comma-separated plain loopback HTTP base URLs replacing enumeration |
+| `--discovery-nodes` | `0` = unknown; 1–64 asserts physical nodes for every auto target |
+
+See [automatic discovery](discovery.md) for supported engines, scope, limits,
+diagnostics, model evidence and migration. Automatic mode requires a fixed,
+nonzero exporter listen port. Endpoints cannot be set with discovery disabled.
 
 Remote-write flags, defaults, queue limits, authentication and replay semantics
 have one reference in [remote-write.md](remote-write.md#built-in-sender).
@@ -81,6 +88,8 @@ The binary directly reads `LLM_EXPORTER_HOST` and `XDG_STATE_HOME`; the
 `LLM_EXPORTER_REGISTRATION_DIR`, `LLM_EXPORTER_LISTEN`, `REVISION` and
 `PROMETHEUS_AGENT_*` variables in [`.env.example`](../.env.example) are Compose
 configuration/build inputs, not equivalent native CLI environment flags.
+The same is true of `LLM_EXPORTER_DISCOVERY`, `LLM_EXPORTER_DISCOVERY_NODES`
+and `LLM_EXPORTER_DISCOVERY_ENDPOINTS`.
 Compose also maps `LLM_ENGINE*` settings to the one-shot `register` service's
 CLI flags, and `LLM_EXPORTER_UID`/`LLM_EXPORTER_GID` to that service's user.
 The native binary does not load `.env`. See [Compose setup](compose.md).
