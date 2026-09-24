@@ -107,6 +107,36 @@ sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="prefill"}[1m
 hits are `llm_prompt_cached_tokens_total`. The full schema is in
 [`docs/design.md`](docs/design.md).
 
+Every series below carries `engine`, `model`, `backend`, `host` and `nodes`;
+engine measurements also carry `worker`. `llm_registration_invalid` is the
+exception: it has `engine`, `model`, `host` and `file` only. Which engine
+supplies which series is in [`docs/adapters.md`](docs/adapters.md); check
+`llm_metric_available` rather than assuming an absent series means zero.
+
+| metric | type | extra labels | meaning |
+|---|---|---|---|
+| `llm_tokens_total` | counter | `phase` | prefill (computed only) or decode tokens |
+| `llm_prompt_cached_tokens_total` | counter | | prompt tokens served from prefix cache |
+| `llm_request_phase_seconds_total` | counter | `phase` | per-request phase time, summed (per-stream clock) |
+| `llm_engine_phase_seconds_total` | counter | `phase` | engine wall time in phase (aggregate clock) |
+| `llm_requests_total` | counter | `status` | finished requests by finish reason |
+| `llm_requests_running` | gauge | | requests in flight |
+| `llm_kv_cache_usage_ratio` | gauge | | KV cache usage, 0..1 |
+| `llm_time_to_first_token_seconds` | histogram | | TTFT, engine's own buckets |
+| `llm_spec_draft_tokens_total` | counter | | speculative draft tokens proposed |
+| `llm_spec_accepted_tokens_total` | counter | | draft tokens accepted |
+| `llm_spec_verify_steps_total` | counter | | verification steps |
+| `llm_engine_up` | gauge | | 1 = telemetry obtained on the last attempt |
+| `llm_metric_available` | gauge | `metric`, `phase` | 1 = measurement provided, 0 = unavailable |
+| `llm_registration_mismatch` | gauge | | 1 = engine serves a different model than registered |
+| `llm_registration_invalid` | gauge | `file` | 1 per registration file that failed to validate |
+| `llm_arm_info` | gauge | `issue`, `adapter_version`, `exporter_version` | build and registration metadata, always 1 |
+| `llm_exporter_scrape_errors_total` | counter | | failed collection attempts |
+| `llm_exporter_last_success_timestamp_seconds` | gauge | | Unix time of last successful collection |
+| `llm_telemetry_backlog_bytes` | gauge | | unread log bytes; counters withheld until caught up |
+| `llm_discovery_status` | gauge | `state` | 1 for the current discovery state |
+| `llm_discovery_changed_timestamp_seconds` | gauge | | last identity/listener transition; exclude rate windows crossing it |
+
 | engine | source | status |
 |---|---|---|
 | vLLM | `/metrics` | yes |

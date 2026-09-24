@@ -84,6 +84,10 @@ llm_exporter_last_success_timestamp_seconds{<id>}
 llm_registration_invalid{engine, model, host, file} 1    engine/model: the file's own, or "unknown"
 llm_telemetry_backlog_bytes{<id>}              unread log bytes; counters withheld until caught up
 llm_metric_available{<id>, metric, phase}      1 = valid token measurement present, 0 = unavailable
+
+# automatic discovery (see discovery.md)
+llm_discovery_status{<id>, state}              1 for the current discovery state
+llm_discovery_changed_timestamp_seconds{<id>}  last identity/listener/recovery transition; exclude rate windows crossing it
 ```
 
 **Every series carries `engine` and `model`** (operator requirement,
