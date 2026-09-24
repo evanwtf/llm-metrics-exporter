@@ -50,11 +50,11 @@ func TestAutomaticHTTPHotSwitch(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Fatal(text)
 		}
-		hasTokens := strings.Contains(text, "\nllm_tokens_total{")
+		hasTokens := strings.Contains(text, "\nllme_tokens_total{")
 		if hasTokens != (p != 1) {
 			t.Fatalf("phase %d stale/missing counters: %s", p, text)
 		}
-		if !strings.Contains(text, `nodes="unknown"`) || !strings.Contains(text, "llm_discovery_changed_timestamp_seconds{") {
+		if !strings.Contains(text, `nodes="unknown"`) || !strings.Contains(text, "llme_exporter_discovery_changed_timestamp_seconds{") {
 			t.Fatal(text)
 		}
 		if p == 2 && (strings.Contains(text, `engine="vllm"`) || !strings.Contains(text, `model="llama-model"`)) {

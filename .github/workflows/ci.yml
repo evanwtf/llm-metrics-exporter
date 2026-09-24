@@ -66,8 +66,8 @@ jobs:
           for i in $(seq 1 20); do curl -sf "http://127.0.0.1:$port/healthz" >/dev/null && break; sleep 0.5; done
           docker exec "$name" /usr/bin/llm-metrics-exporter health
           body=$(curl -sf "http://127.0.0.1:$port/metrics")
-          echo "$body" | grep '^llm_'
-          echo "$body" | grep -q '^llm_engine_up{backend="ci",engine="vllm",.*model="ci-model",nodes="1"} 0$'
+          echo "$body" | grep '^llme_'
+          echo "$body" | grep -q '^llme_engine_up{backend="ci",engine="vllm",.*model="ci-model",nodes="1"} 0$'
 
   macos:
     runs-on: [self-hosted, macOS, ARM64]

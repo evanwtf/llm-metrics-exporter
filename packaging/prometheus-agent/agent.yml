@@ -20,7 +20,7 @@ remote_write:
   - url: https://<central-prometheus>/api/v1/write
     write_relabel_configs:
       # The exporter's series, plus up{job="llm-metrics-exporter"}: with the
-      # exporter down every llm_* series goes stale, and up is what says so.
+      # exporter down every llme_* series goes stale, and up is what says so.
       - source_labels: [__name__]
-        regex: "llm_.*|up"
+        regex: "llme_.*|up"
         action: keep

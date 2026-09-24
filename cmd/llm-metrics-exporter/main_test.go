@@ -76,7 +76,7 @@ func TestVersion(t *testing.T) {
 	}
 }
 
-// /metrics serves only the llm_* series, so every series has engine and
+// /metrics serves only the llme_* series, so every series has engine and
 // model: no Go runtime or process series (operator requirement).
 func TestHandler(t *testing.T) {
 	dir := t.TempDir()
@@ -106,14 +106,14 @@ func TestHandler(t *testing.T) {
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		if !strings.HasPrefix(line, "llm_") {
+		if !strings.HasPrefix(line, "llme_") {
 			t.Errorf("non-llm series: %s", line)
 		}
 		if !strings.Contains(line, `engine="`) || !strings.Contains(line, `model="`) {
 			t.Errorf("series without engine and model: %s", line)
 		}
 	}
-	if !strings.Contains(string(text), `llm_tokens_total{backend="tiny",engine="llamacpp",host="h1",model="smollm2-135m",nodes="1",phase="decode",worker="default"} 224`) {
+	if !strings.Contains(string(text), `llme_tokens_total{backend="tiny",engine="llamacpp",host="h1",model="smollm2-135m",nodes="1",phase="decode",worker="default"} 224`) {
 		t.Errorf("decode tokens missing:\n%s", text)
 	}
 

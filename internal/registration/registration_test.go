@@ -230,7 +230,7 @@ func mustParse(t *testing.T, body string) Registration {
 }
 
 // An invalid file still yields engine and model labels: its own values, or
-// "unknown" when it states none (llm_registration_invalid).
+// "unknown" when it states none (llme_exporter_registration_invalid).
 func TestInvalidCarriesItsOwnEngineAndModel(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "a.yaml"), []byte("version: 1\nengine: sglang\nmodel: m1\n"), 0o644)

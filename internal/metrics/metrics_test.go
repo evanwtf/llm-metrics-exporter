@@ -7,12 +7,30 @@ import (
 	"testing"
 )
 
-func TestAdapterDefsAreUniqueAndPrefixed(t *testing.T) {
+// Engine measurements are llme_*; the exporter's own state is
+// llme_exporter_*, except llme_engine_up, the conventional *_up health series.
+func TestNamesFollowThePrefixSplit(t *testing.T) {
+	for _, d := range AdapterDefs() {
+		if !strings.HasPrefix(d.Name, "llme_") || strings.HasPrefix(d.Name, "llme_exporter_") {
+			t.Errorf("%s: an engine measurement is llme_* and not llme_exporter_*", d.Name)
+		}
+	}
+	for _, d := range ExporterDefs() {
+		if d.Name == EngineUp.Name {
+			continue
+		}
+		if !strings.HasPrefix(d.Name, "llme_exporter_") {
+			t.Errorf("%s: exporter state is llme_exporter_*", d.Name)
+		}
+	}
+	if EngineUp.Name != "llme_engine_up" {
+		t.Errorf("EngineUp is %s, want llme_engine_up", EngineUp.Name)
+	}
+}
+
+func TestAdapterDefsAreUnique(t *testing.T) {
 	seen := map[string]bool{}
 	for _, d := range AdapterDefs() {
-		if !strings.HasPrefix(d.Name, "llm_") {
-			t.Errorf("%s: canonical names start with llm_", d.Name)
-		}
 		if seen[d.Name] {
 			t.Errorf("%s: defined twice", d.Name)
 		}
@@ -50,7 +68,7 @@ func TestValidateAcceptsAWellFormedSample(t *testing.T) {
 }
 
 func TestValidateRejects(t *testing.T) {
-	unknown := Def{Name: "llm_made_up_total", Kind: Counter}
+	unknown := Def{Name: "llme_made_up_total", Kind: Counter}
 	cases := map[string]Sample{
 		"unknown metric":     {Def: &unknown, Value: 1},
 		"nil def":            {Value: 1},

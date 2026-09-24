@@ -56,7 +56,7 @@ func TestDiscoveredPortsConcurrentModelsAndWorkerResets(t *testing.T) {
 		}
 		out := map[string]float64{}
 		for _, f := range families {
-			if f.GetName() != "llm_tokens_total" {
+			if f.GetName() != "llme_tokens_total" {
 				continue
 			}
 			for _, m := range f.Metric {

@@ -160,17 +160,17 @@ func TestHealthyArm(t *testing.T) {
 		}
 		return m
 	}
-	want(t, fams, "llm_engine_up", id, 1)
-	want(t, fams, "llm_registration_mismatch", id, 0)
-	want(t, fams, "llm_tokens_total", with("phase", "decode"), 224)
-	want(t, fams, "llm_tokens_total", with("phase", "prefill"), 278)
-	want(t, fams, "llm_engine_phase_seconds_total", with("phase", "prefill"), 0.13508)
-	want(t, fams, "llm_exporter_scrape_errors_total", id, 0)
-	want(t, fams, "llm_arm_info", map[string]string{
+	want(t, fams, "llme_engine_up", id, 1)
+	want(t, fams, "llme_exporter_registration_mismatch", id, 0)
+	want(t, fams, "llme_tokens_total", with("phase", "decode"), 224)
+	want(t, fams, "llme_tokens_total", with("phase", "prefill"), 278)
+	want(t, fams, "llme_engine_phase_seconds_total", with("phase", "prefill"), 0.13508)
+	want(t, fams, "llme_exporter_scrape_errors_total", id, 0)
+	want(t, fams, "llme_exporter_arm_info", map[string]string{
 		"engine": "llamacpp", "model": "smollm2-135m", "issue": "675",
 		"adapter_version": "1", "exporter_version": "0.0.0-test",
 	}, 1)
-	if v, _ := value(fams, "llm_exporter_last_success_timestamp_seconds", id); v < float64(time.Now().Add(-time.Minute).Unix()) {
+	if v, _ := value(fams, "llme_exporter_last_success_timestamp_seconds", id); v < float64(time.Now().Add(-time.Minute).Unix()) {
 		t.Errorf("last success %v", v)
 	}
 }
@@ -184,14 +184,14 @@ func TestDownArmIsLoud(t *testing.T) {
 	id := map[string]string{"engine": "llamacpp", "model": "smollm2-135m", "backend": "tiny"}
 	fams := e.gather(t)
 	requireEngineAndModel(t, fams)
-	want(t, fams, "llm_engine_up", id, 0)
-	want(t, fams, "llm_exporter_scrape_errors_total", id, 1)
-	want(t, fams, "llm_exporter_last_success_timestamp_seconds", id, 0)
-	if _, ok := value(fams, "llm_tokens_total", nil); ok {
+	want(t, fams, "llme_engine_up", id, 0)
+	want(t, fams, "llme_exporter_scrape_errors_total", id, 1)
+	want(t, fams, "llme_exporter_last_success_timestamp_seconds", id, 0)
+	if _, ok := value(fams, "llme_tokens_total", nil); ok {
 		t.Error("token series emitted for a down arm")
 	}
 	fams = e.gather(t)
-	want(t, fams, "llm_exporter_scrape_errors_total", id, 2)
+	want(t, fams, "llme_exporter_scrape_errors_total", id, 2)
 }
 
 func TestMismatchIsExported(t *testing.T) {
@@ -203,8 +203,8 @@ func TestMismatchIsExported(t *testing.T) {
 	r.ServedModel = "smollm2-135m"
 	e.register(t, r)
 	fams := e.gather(t)
-	want(t, fams, "llm_registration_mismatch", map[string]string{"backend": "tiny"}, 1)
-	want(t, fams, "llm_engine_up", map[string]string{"backend": "tiny"}, 0)
+	want(t, fams, "llme_exporter_registration_mismatch", map[string]string{"backend": "tiny"}, 1)
+	want(t, fams, "llme_engine_up", map[string]string{"backend": "tiny"}, 0)
 }
 
 // A registered engine this build has no adapter for is down, not ignored.
@@ -213,7 +213,7 @@ func TestEngineWithoutAnAdapter(t *testing.T) {
 	e.register(t, testArm("mlx-serve", "http://127.0.0.1:1"))
 	fams := e.gather(t)
 	requireEngineAndModel(t, fams)
-	want(t, fams, "llm_engine_up", map[string]string{"engine": "mlx-serve"}, 0)
+	want(t, fams, "llme_engine_up", map[string]string{"engine": "mlx-serve"}, 0)
 }
 
 func TestInvalidRegistration(t *testing.T) {
@@ -221,7 +221,7 @@ func TestInvalidRegistration(t *testing.T) {
 	os.WriteFile(filepath.Join(e.dir, "bad.yaml"), []byte("version: 1\nengine: vllm\n"), 0o644)
 	fams := e.gather(t)
 	requireEngineAndModel(t, fams)
-	want(t, fams, "llm_registration_invalid", map[string]string{
+	want(t, fams, "llme_exporter_registration_invalid", map[string]string{
 		"engine": "vllm", "model": "unknown", "host": "h1", "file": "bad.yaml",
 	}, 1)
 }
@@ -291,7 +291,7 @@ func TestSlowEngineTimesOut(t *testing.T) {
 	if time.Since(start) > 2*time.Second {
 		t.Fatal("scrape waited for the slow engine")
 	}
-	want(t, fams, "llm_engine_up", map[string]string{"engine": "vllm"}, 0)
+	want(t, fams, "llme_engine_up", map[string]string{"engine": "vllm"}, 0)
 }
 
 // A sample that breaks the schema is dropped, and the rest still export.
@@ -307,9 +307,9 @@ func TestInvalidSampleIsDropped(t *testing.T) {
 	e := newEnv(t, fakeInfo(&starts, &closes, bad))
 	e.register(t, testArm("vllm", "http://127.0.0.1:1"))
 	fams := e.gather(t)
-	want(t, fams, "llm_tokens_total", map[string]string{"phase": "decode"}, 7)
+	want(t, fams, "llme_tokens_total", map[string]string{"phase": "decode"}, 7)
 	for _, f := range fams {
-		if f.GetName() == "llm_tokens_total" && len(f.GetMetric()) != 1 {
+		if f.GetName() == "llme_tokens_total" && len(f.GetMetric()) != 1 {
 			t.Fatalf("got %d token series", len(f.GetMetric()))
 		}
 	}
@@ -325,7 +325,7 @@ func TestHistogramDropsInfBucket(t *testing.T) {
 	e := newEnv(t, fakeInfo(&starts, &closes, h))
 	e.register(t, testArm("vllm", "http://127.0.0.1:1"))
 	fams := e.gather(t)
-	want(t, fams, "llm_time_to_first_token_seconds", map[string]string{"engine": "vllm"}, 2)
+	want(t, fams, "llme_time_to_first_token_seconds", map[string]string{"engine": "vllm"}, 2)
 }
 
 func posInf() float64 { return math.Inf(1) }
