@@ -183,6 +183,11 @@ distinct series, or they are omitted with the reason documented.
 
 ## Labels
 
+For automatic targets, the [discovery identity rules](discovery.md#evidence-identity-and-availability)
+extend this original pinned-label table: observed engine/model, hashed endpoint
+backend, and `nodes="unknown"` unless explicitly asserted. Discovery diagnostics
+add `state`; `llm_discovery_changed_timestamp_seconds` marks rate-window boundaries.
+
 | label | required | value | why |
 |---|---|---|---|
 | `engine` | **yes** (operator) | `vllm`, `llamacpp`, `sglang`, `mlx-serve`, `ollama`, `ds4`, `mtplx` | the thing being compared |
@@ -243,6 +248,13 @@ proxy-versus-log decision. mlx-serve is likewise a planned pass-through adapter.
 
 ## Discovery: arms register themselves
 
+This section describes **explicit pins**. Since issue #13, the default is
+[continuous local discovery](discovery.md), without launcher registration.
+Its evidence-based identity, bounded probing, expiry and transition rules are
+authoritative for automatic targets; the rules below remain binding for pins.
+The original registration-only rationale and policy are retained in
+[migration history](discovery.md#pins-and-migration).
+
 Ports vary by recipe, and some launchers are third-party scripts. So the
 exporter is not configured with ports. Whatever launches a model writes a
 **registration file** on its own host, and deletes it at stop:
@@ -293,7 +305,7 @@ exporter-owned counters.
 
 ### Health
 
-`llm_engine_up 1` means **the exporter got telemetry from this registered engine
+`llm_engine_up 1` means **the exporter got telemetry from this identified engine
 on its most recent collection attempt**, not merely that the HTTP port answered.
 Anything else is `0`, with the labels intact, so a missing metric is visible and
 alertable instead of an empty panel. `llm_exporter_scrape_errors_total` and
@@ -315,6 +327,11 @@ until the I/O finishes or the process restarts, without spawning more calls.
 A registration left behind by a crashed launcher or a reboot keeps exporting
 `llm_engine_up 0` until someone deregisters it. That is deliberate: the
 exporter cannot tell "stopped on purpose" from "died".
+
+Automatic targets instead retain down health only for the bounded interval
+specified in [discovery](discovery.md#evidence-identity-and-availability), and
+never retain old measurement samples. Use the [transition-aware rate query](discovery.md#throughput-and-reset-boundaries)
+for automatic switching: ordinary `rate()` can retain history inside its window.
 
 ## Service management
 

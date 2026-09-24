@@ -93,7 +93,7 @@ var (
 var (
 	EngineUp = Def{
 		Name: "llm_engine_up", Kind: Gauge, Identity: true,
-		Help: "1 if the exporter got telemetry from this registered engine on its last attempt, else 0.",
+		Help: "1 if the exporter got telemetry from this identified engine on its last attempt, else 0.",
 	}
 	RegistrationMismatch = Def{
 		Name: "llm_registration_mismatch", Kind: Gauge, Identity: true,
@@ -124,6 +124,8 @@ var (
 
 var BacklogBytes = Def{Name: "llm_telemetry_backlog_bytes", Kind: Gauge, Identity: true, Help: "Unread telemetry bytes. Nonzero means counters are withheld until catch-up."}
 var MetricAvailable = Def{Name: "llm_metric_available", Kind: Gauge, Identity: true, Labels: []string{"metric", "phase"}, Help: "1 when this collection provides the named measurement, including measured zero; 0 when unavailable."}
+var DiscoveryStatus = Def{Name: "llm_discovery_status", Kind: Gauge, Identity: true, Labels: []string{"state"}, Help: "Current automatic discovery state. Always 1 for the reported state."}
+var DiscoveryChanged = Def{Name: "llm_discovery_changed_timestamp_seconds", Kind: Gauge, Identity: true, Help: "Unix time of last observed identity, listener generation, or recovery transition. Exclude rate windows crossing this boundary."}
 
 // Unknown is the label value for an engine or model a file does not state.
 const Unknown = "unknown"
@@ -140,7 +142,7 @@ func AdapterDefs() []Def {
 // ExporterDefs are the series only the exporter emits.
 func ExporterDefs() []Def {
 	return []Def{
-		BacklogBytes, MetricAvailable,
+		BacklogBytes, MetricAvailable, DiscoveryStatus, DiscoveryChanged,
 		EngineUp, RegistrationMismatch, ArmInfo, ScrapeErrors, LastSuccess,
 		RegistrationInvalid,
 	}

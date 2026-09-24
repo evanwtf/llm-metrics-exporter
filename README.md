@@ -2,8 +2,10 @@
 
 One Prometheus schema for LLM inference throughput, whatever engine is serving.
 
-Every inference host runs one exporter. Launchers register each model server
-("arm") they start. The exporter reads each registered server in its own
+Every inference host runs one exporter. By default it continuously discovers
+local vLLM, llama.cpp and SGLang servers and infers engine/model identity.
+Launchers can still pin each model server ("arm") through registrations.
+The exporter reads each server in its own
 dialect (a native `/metrics` endpoint, or a log) and exposes the result under
 one set of canonical `llm_*` counters. Every per-deployment series carries
 `engine`, `model`, `backend`, `host` and `nodes`; measurements also carry `worker`
@@ -19,7 +21,18 @@ cloning. For vLLM service installation and scraping, see
 For laptops or changing IP addresses, use [built-in remote write](docs/remote-write.md).
 No launcher is required: [static YAML targets](docs/static-targets.md) also work.
 
-## Bootstrap
+## Automatic startup
+
+After cloning, `make build` then
+`./dist/llm-metrics-exporter serve --listen 127.0.0.1:9109` is enough for supported
+local engines with metrics enabled. Stop vLLM and start llama.cpp—even on a
+different local port—and the same exporter URL follows without a restart or
+configuration change. See the [quickstart](QUICKSTART.md) for Compose and
+[discovery](docs/discovery.md) for scope, model evidence, unknown topology,
+diagnostics, and safe rate windows. Unsupported/log-only engines need explicit
+configuration or future adapters; automatic does not mean universal support.
+
+## Pinned bootstrap (optional)
 
 From a machine with Go (the version in `go.mod`) to a running exporter that
 reads a registered llama.cpp server. Linux (amd64, arm64) and macOS (arm64,
@@ -42,7 +55,7 @@ go build -o "$BIN/llm-metrics-exporter" ./cmd/llm-metrics-exporter
   --endpoint "$ENGINE_URL" --model demo-model --nodes 1 --run-id demo-1
 
 # Serve on :9109, then read it.
-"$BIN/llm-metrics-exporter" serve &
+"$BIN/llm-metrics-exporter" serve --discovery=off &
 curl -s http://127.0.0.1:9109/metrics | grep '^llm_'
 
 # Stop observing the arm (does not stop the model server or exporter).
@@ -78,6 +91,9 @@ with `make build GO="$HOME/go/bin/go"`; plain Go commands remain supported.
 ## What it exports
 
 Rates are PromQL over counters; there is no tok/s gauge.
+These basic queries retain historical samples within the rate window. For
+automatic switching, use the [health and transition guards](docs/discovery.md#throughput-and-reset-boundaries)
+to exclude unavailable targets and known replacement boundaries.
 
 ```promql
 sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="decode"}[1m]))   # decode tok/s
@@ -103,6 +119,7 @@ hits are `llm_prompt_cached_tokens_total`. The full schema is in
 | doc | read it for |
 |---|---|
 | [CLI reference](docs/cli.md) | commands, flags, environment, HTTP endpoints and exit codes |
+| [Automatic discovery](docs/discovery.md) | continuous engine switching, supported scope, identity, limits, safe rate queries |
 | [Development](docs/development.md) | checks, implementation map, hooks, manual releases and documentation maintenance |
 | [Security](docs/security.md) | private configuration, runtime credentials and publication checks |
 | [`docs/static-targets.md`](docs/static-targets.md) | static deployments, token semantics, and measurement availability |

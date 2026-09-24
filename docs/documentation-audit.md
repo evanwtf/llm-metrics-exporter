@@ -1,5 +1,29 @@
 # Documentation reconciliation audit
 
+## Issue 13 implementation migration
+
+Source: `a084ee903b59d329d4fd11fc3fce3727957796e5` (main), clean before feature
+work; September 2026. This is an implementation-authorized policy extension,
+not a documentation-only change. Original audit below remains historical.
+
+| Source / distinct items | Destination / disposition |
+| --- | --- |
+| QUICKSTART introduction, vLLM/curl prerequisites, no Prometheus needed; engine URL/model lookup, exact metric label, nodes and backend replacement warning | Full manual procedure retained in `pinned-quickstart.md`, linked from new automatic QUICKSTART; automatic prerequisites/identity now in QUICKSTART and discovery |
+| QUICKSTART native Make/Go override, registration fields/run ID, foreground/cancellation, raw Go build and cache troubleshooting | Retained in pinned quickstart; automatic entry omits mandatory registration and links the manual path |
+| QUICKSTART Compose prerequisites, native macOS/VM restriction, exported path/host/listener, mkdir, build, UID/GID writable one-shot mount, read-only long-running mount, up/ps, shell overrides/.env, permissions and credential caveat | Retained in pinned quickstart; add `LLM_EXPORTER_DISCOVERY=off` for deliberate manual-only semantics. Automatic root path uses Compose .env directly, preserving directory/access prerequisites |
+| QUICKSTART curl/grep and retry, backend quickstart, up/mismatch/availability, computed/cache/idle/missing semantics, liveness, request/delta link | Retained in pinned quickstart; auto root diagnostics add discovery status and observed identity |
+| QUICKSTART scraping/access control, remote write/duplicates, static/CLI/development links, native and Docker cleanup/run ID/no model stop | Retained in pinned quickstart; auto links to manual cleanup and warns removal of a pin exposes a local auto target |
+| AGENTS registration-authority rule | Extended for automatic evidence-based identity; original exact rule and variable-port/third-party-launcher rationale retained in discovery § Pins and migration. Pin authority unchanged |
+| README launcher-only introduction and Bootstrap | Current default explained; original commands retained under Pinned bootstrap, adding `--discovery=off` so deregister still stops observation. All existing examples and query semantics retained with transition warning |
+| design Labels, Discovery, Health | Original pin table/procedure retained; explicit auto extension links scope, unknown topology, bounded down retention and reset guard. Registered-engine health wording broadened to identified engines, not mere port reachability |
+| compose hostname claim | Corrected: network namespace sharing does not share hostname. Original comment claimed host networking gives the host hostname; README already contradicted it. Explicit host setting remains required for stable identity |
+
+Preservation check: original quickstart compared in full with the relocated
+manual guide; only title, relative links and explicit manual-only discovery
+settings differ, plus the migration introduction. README examples and detailed
+design policies remain in place. No historical measurements or fixture evidence
+were changed. No secret files were read, changed or published by this migration.
+
 Source: commit `7932886b44f22d66cfc5e4a7d31e2c7c37b0b205`, clean checkout;
 documentation review dated 2026-09-23. No uncommitted source material was
 replaced. This is a single established Go application. Both root entry points
