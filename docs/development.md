@@ -7,7 +7,30 @@ validation have their own prerequisites; “Go only” does not describe all CI.
 
 ## Checks and build
 
-Run from the repository root with Go on PATH:
+The optional [Makefile](../Makefile) provides shared local/CI shortcuts. Install
+Make separately if it is not available; plain Go commands below still work.
+Run from the repository root:
+
+```sh
+make help                       # also the default target; requires no Go
+make build                      # dist/llm-metrics-exporter, with -trimpath
+make test                       # all Go tests
+make race                       # requires cgo and a C compiler
+make check                      # formatting, vet, dependency/public checks, tests
+make build GO="$HOME/go/bin/go"  # explicit executable when Go is not on PATH
+```
+
+`GO` can also be set in the environment. It selects one executable, not a
+command plus arguments. `fmt-check` finds gofmt in that executable's GOROOT,
+so a Go override also selects the matching formatter. All check targets are
+read-only with respect to source files: `fmt-check` reports formatting changes
+needed; `deps-check` uses `go mod tidy -diff`. Build/tests can write artifacts
+and Go caches. Individual checks are `fmt-check`, `vet`, `deps-check`, and
+`public-check`. `make -k check` runs independent checks even after a failure
+and still exits nonzero; Linux CI uses this form. Make does not publish releases
+or start/deploy services.
+
+Equivalent underlying commands (with Go on PATH), plus single-test selection:
 
 ```sh
 go test ./...                    # all tests
@@ -38,6 +61,10 @@ tidiness, builds four release targets, runs the Linux binary, validates Compose,
 builds/runs the container, and runs macOS race tests and a native build. CI runs
 on pushes to `main` and on pull requests, using self-hosted Linux X64 and macOS
 ARM64 runners with per-run Go caches.
+CI runners now require Make: Linux uses `make -k check`, and macOS uses `make
+race` and `make build`. Platform cross-build and container checks remain in CI.
+Makefile regression tests in `scripts/makefile` exercise command dispatch and
+failure propagation with a fake toolchain; they skip if Make is unavailable.
 
 For documentation-only work restricted to static checks, do not execute these
 build/test/hook commands just to verify the text. Check commands against their

@@ -13,7 +13,9 @@ a persistent offline queue), or a separate Prometheus Agent. Grafana and the
 benchmark harness can read the same counters; external harness integration
 remains tracked in the [plan](docs/plan.md).
 
-For vLLM, start with [exporter and Prometheus setup](docs/prometheus-setup.md).
+Start with the [quickstart](QUICKSTART.md) for native or Docker commands after
+cloning. For vLLM service installation and scraping, see
+[exporter and Prometheus setup](docs/prometheus-setup.md).
 For laptops or changing IP addresses, use [built-in remote write](docs/remote-write.md).
 No launcher is required: [static YAML targets](docs/static-targets.md) also work.
 
@@ -69,6 +71,9 @@ To run it as a service:
 
 For release archive contents, macOS quarantine handling, development checks
 and hook installation, see [development and releases](docs/development.md).
+With Make installed, `make help` lists the optional shortcuts: `make build`,
+`make test`, `make race`, and `make check`. An explicit Go installation works
+with `make build GO="$HOME/go/bin/go"`; plain Go commands remain supported.
 
 ## What it exports
 

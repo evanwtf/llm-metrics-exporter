@@ -24,17 +24,9 @@ jobs:
         with:
           go-version-file: go.mod
           cache: false
-      - name: format, vet, public-repo guard
-        # Collect every failure, so one run reports all of them.
-        run: |
-          status=0
-          unformatted=$(gofmt -l .)
-          if [ -n "$unformatted" ]; then echo "gofmt needed:"; echo "$unformatted"; status=1; fi
-          go vet ./... || status=$?
-          sh scripts/check-public.sh || status=$?
-          go mod tidy -diff || status=$?
-          exit "$status"
-      - run: go test ./...
+      - name: shared development checks
+        # Keep going after a failure so independent checks still report results.
+        run: make -k check
       - name: build every release target
         run: |
           for target in linux/amd64 linux/arm64 darwin/arm64 darwin/amd64; do
@@ -87,5 +79,5 @@ jobs:
           go-version-file: go.mod
           cache: false
       # The race detector needs cgo, which the macOS runner has.
-      - run: go test -race ./...
-      - run: go build -trimpath -o llm-metrics-exporter ./cmd/llm-metrics-exporter && ./llm-metrics-exporter --version
+      - run: make race
+      - run: make build && ./dist/llm-metrics-exporter --version
