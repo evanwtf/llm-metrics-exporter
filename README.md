@@ -10,7 +10,12 @@ one set of canonical `llm_*` counters. Every per-deployment series carries
 to preserve independent resets. Static YAML targets work without a launcher.
 Deliver metrics through direct scraping, optional built-in remote write (with
 a persistent offline queue), or a separate Prometheus Agent. Grafana and the
-benchmark harness read the same counters.
+benchmark harness can read the same counters; external harness integration
+remains tracked in the [plan](docs/plan.md).
+
+For vLLM, start with [exporter and Prometheus setup](docs/prometheus-setup.md).
+For laptops or changing IP addresses, use [built-in remote write](docs/remote-write.md).
+No launcher is required: [static YAML targets](docs/static-targets.md) also work.
 
 ## Bootstrap
 
@@ -26,6 +31,7 @@ export ENGINE_URL=http://127.0.0.1:8080   # a llama-server started with --metric
 git clone https://github.com/evanwtf/llm-metrics-exporter "$SRC"
 cd "$SRC"
 go test ./...
+mkdir -p "$BIN"
 go build -o "$BIN/llm-metrics-exporter" ./cmd/llm-metrics-exporter
 "$BIN/llm-metrics-exporter" --version
 
@@ -37,12 +43,15 @@ go build -o "$BIN/llm-metrics-exporter" ./cmd/llm-metrics-exporter
 "$BIN/llm-metrics-exporter" serve &
 curl -s http://127.0.0.1:9109/metrics | grep '^llm_'
 
-# Stop the arm.
+# Stop observing the arm (does not stop the model server or exporter).
 "$BIN/llm-metrics-exporter" deregister --backend demo --run-id demo-1
 ```
 
 With no engine at `$ENGINE_URL`, the arm still appears, as
-`llm_engine_up{...} 0`. A missing metric is never silent.
+`llm_engine_up{...} 0`. Unsupported token measurements are unavailable, not zero;
+check `llm_metric_available` separately from engine health. The default listener
+is all interfaces, without built-in TLS/authentication; restrict access to
+trusted clients, or use `--listen 127.0.0.1:9109` for local-only operation.
 
 To run it as a service:
 
@@ -52,18 +61,14 @@ To run it as a service:
   directory first: `mkdir -p ~/.local/state/llm-metrics-exporter/registrations`.
   `docker compose --profile agent up -d` adds a Prometheus Agent. Launchers
   still register with the host binary.
+  Set `LLM_EXPORTER_HOST` explicitly for stable container identity; host
+  networking shares endpoints, not the host's hostname.
 - **Linux, no Docker:** the systemd user unit in [`packaging/systemd`](packaging/systemd).
 - **macOS:** run natively with the LaunchAgent in [`packaging/launchd`](packaging/launchd).
   A container on macOS runs in a VM and cannot see the host's engines.
 
-Prebuilt binaries: each GitHub release has one zip per platform
-(`llm-metrics-exporter-<version>-<os>-<arch>.zip`, for darwin/linux and
-arm64/amd64) with the binary, LICENSE and README. On macOS, a zip downloaded
-in a browser is quarantined, and the unsigned binary will not run until you
-clear it: `xattr -d com.apple.quarantine llm-metrics-exporter`.
-
-For development, install the hooks once: `pre-commit install` (for example
-with `uvx pre-commit install`).
+For release archive contents, macOS quarantine handling, development checks
+and hook installation, see [development and releases](docs/development.md).
 
 ## What it exports
 
@@ -92,17 +97,21 @@ hits are `llm_prompt_cached_tokens_total`. The full schema is in
 
 | doc | read it for |
 |---|---|
+| [CLI reference](docs/cli.md) | commands, flags, environment, HTTP endpoints and exit codes |
+| [Development](docs/development.md) | checks, implementation map, hooks, manual releases and documentation maintenance |
+| [Security](docs/security.md) | private configuration, runtime credentials and publication checks |
 | [`docs/static-targets.md`](docs/static-targets.md) | static deployments, token semantics, and measurement availability |
 | [`docs/remote-write.md`](docs/remote-write.md) | enable the Prometheus receiver for outbound delivery |
 | [`docs/prometheus-setup.md`](docs/prometheus-setup.md) | register vLLM, run the exporter as a service, and configure direct Prometheus scraping |
 | [`docs/cheat-sheet.md`](docs/cheat-sheet.md) | build and live-test against vLLM, verify token deltas, and clean up |
 | [`docs/problem.md`](docs/problem.md) | why this exists, and what "done" means |
-| [`docs/environment.md`](docs/environment.md) | the fleet, the engines, and the monitoring stack it plugs into |
+| [`docs/environment.md`](docs/environment.md) | historical fleet and monitoring context, not a current deployment inventory |
 | [`docs/design.md`](docs/design.md) | architecture, metric schema, labels, adapters, registration |
 | [`docs/adapters.md`](docs/adapters.md) | per engine: the source, clock and update timing of every series |
 | [`docs/findings.md`](docs/findings.md) | what each engine was observed to export, with evidence |
 | [`docs/plan.md`](docs/plan.md) | what is done, what is next |
-| [`docs/changelog.md`](docs/changelog.md) | what shipped, and why; the source of release notes |
+| [`docs/changelog.md`](docs/changelog.md) | release notes and unreleased changes, with reasons |
+| [Documentation audit](docs/documentation-audit.md) | preservation mapping and historical corrections |
 | [`AGENTS.md`](AGENTS.md) | rules for anyone, human or agent, working in this repo |
 
 Origin: [evanwtf/local-llm#675](https://github.com/evanwtf/local-llm/issues/675).
@@ -113,16 +122,13 @@ collector it (and anything else) reads them from.
 
 Publishing is manual. Nothing publishes on a push or a tag.
 
-1. Set the version in `internal/version/version.go` and add its section to
-   `docs/changelog.md`. Commit and push.
-2. Run the publish workflow: **Actions → publish → Run workflow**, or
-   `gh workflow run publish.yml -f tag=v0.1.0`.
+Follow the [release procedure](docs/development.md#releases) for version and
+changelog prerequisites, platform archives and workflow checks. The current
+changelog marks 0.1.0 unreleased.
 
-The workflow refuses a tag that disagrees with `internal/version`, a tag that
-already exists, and a version with no changelog section. It tests, builds the
-four zips, runs the linux/amd64 binary out of its zip, and creates the tag and
-the release, with the changelog section as the notes.
+When contributing documentation, update the authoritative guide; keep entry
+points short and place lengthy reference material and incidents in supporting docs.
 
 ## License
 
-MIT
+[MIT](LICENSE)

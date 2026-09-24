@@ -168,7 +168,10 @@ registration bookkeeping. For permanent service installation, see the
   restarts. Discard benchmark deltas spanning a known restart even if the final
   counter has already exceeded the initial value.
 - Independent worker reset handling is tracked in
-  [issue #2](https://github.com/evanwtf/llm-metrics-exporter/issues/2).
+  [issue #2](https://github.com/evanwtf/llm-metrics-exporter/issues/2) (historical
+  context). Worker preservation is implemented; see
+  [the current label contract](design.md#labels). The single live check above
+  still does not prove every worker/reset scenario.
 
 Once Prometheus scrapes the exporter, query the phases separately:
 

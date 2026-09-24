@@ -20,6 +20,10 @@ local-llm stays Python: orchestration, the ledger, analysis.
 
 ## Architecture
 
+The diagram shows the original Prometheus Agent topology. The delivery modes
+below also include direct scraping and the now-implemented built-in sender;
+the listed engines include planned adapters, not only compiled ones.
+
 ```
 vLLM / llama.cpp / SGLang / mlx-serve / Ollama / ds4 / MTPLX
         │  each read in its own dialect
@@ -46,6 +50,9 @@ central Prometheus  ──►  Grafana, and the benchmark harness
 
 Counters are canonical. Rates are computed in PromQL. `<id>` is the identity
 label set: `engine, model, backend, host, nodes` (see *Labels*).
+The schema shorthand below omits `worker` on engine measurements; those
+measurements also carry that label, as specified in *Labels*. Health and
+provenance series do not acquire worker identity by implication.
 
 ```
 # tokens
@@ -95,7 +102,7 @@ sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="decode"}[1m]
 sum by (host, engine, model, backend) (rate(llm_tokens_total{phase="prefill"}[1m]))
 # prefix-cache share of prompt tokens
 rate(llm_prompt_cached_tokens_total[5m])
-  / (rate(llm_prompt_cached_tokens_total[5m]) + rate(llm_tokens_total{phase="prefill"}[5m]))
+  / (rate(llm_prompt_cached_tokens_total[5m]) + ignoring (phase) rate(llm_tokens_total{phase="prefill"}[5m]))
 ```
 
 **No `llm_tokens_per_second` gauge in v1.** Two throughput values computed
@@ -135,6 +142,10 @@ records which clock a row's seconds came from.
 
 Sources come in two kinds, and they restart differently:
 
+The classifications include intended adapters: mlx-serve and MTPLX are not
+implemented, and Ollama's event acquisition method remains open. See the
+adapter status table before treating any classification as implemented support.
+
 - **Pass-through counters** (vLLM, llama.cpp, SGLang, mlx-serve): the engine
   exposes a cumulative counter, and the exporter renames and relabels it
   without re-accumulating. An engine restart appears as a counter reset.
@@ -148,11 +159,17 @@ Sources come in two kinds, and they restart differently:
 There is **no persisted counter state** to survive an exporter restart: a
 benchmark crossed by a restart is invalid, and that is simpler than
 persistence.
+This means adapter counter state, not the remote-write queue and series
+checkpoint, which are persisted. ds4 rereads existing log history after restart;
+its caught-up totals can therefore reappear, but that is a new baseline, not
+newly performed work. A restart still invalidates a benchmark crossing it.
 
 **Update timing differs.** Some engine counters move per scheduler iteration,
 and some move when a request finishes (see the adapter table). Mid-request, a
 token counter can be ahead of its seconds counter. A delta taken between trials,
-with no request in flight, is exact.
+with no request in flight, is exact only after upstream reporting has caught
+up and log backlog is clear. SGLang may lag by one reporting interval, as
+documented in the adapter table; idle alone is not sufficient.
 
 ### Semantic equivalence
 
@@ -172,7 +189,7 @@ distinct series, or they are omitted with the reason documented.
 | `model` | **yes** (operator) | the benchmark's model slug, as the arm registers it | joins to benchmark rows and heartbeats |
 | `backend` | yes | the benchmark's backend name | two arms can share engine and model and differ only in flags. Without this their series merge |
 | `host` | yes | the host serving the API (`--host`, default: the short hostname) | where it ran |
-| `nodes` | yes | `1` or `2` | a two-node server exposes metrics on its head only, so the series has to say it spans two |
+| `nodes` | yes | integer `1`–`64`; the original fleet examples use `1` or `2` | a two-node server exposes metrics on its head only, so the series has to say it spans two |
 | `worker` | engine measurements | upstream worker index, or `default` | preserves independent reset boundaries |
 
 Remote-write delivery adds `job="llm-metrics-exporter"` and `instance=<host>`.
@@ -209,6 +226,10 @@ type Adapter interface {
 - **Stateful, accumulating:** ds4, MTPLX, Ollama. `Collect` reads the bytes
   appended to a log since the last call, adds them to running totals, and
   also checks that the endpoint answers.
+
+Only ds4 implements that stateful mechanism today. MTPLX is planned; the
+original grouping of Ollama with log readers was a proposal, not a resolved
+proxy-versus-log decision. mlx-serve is likewise a planned pass-through adapter.
 
 | adapter | mechanism | status |
 |---|---|---|
@@ -314,6 +335,10 @@ configuration. `--registration-dir` overrides it on both.
 
 ## The benchmark contract
 
+This is the intended contract with the external local-llm project, not evidence
+that its integration is deployed. The [plan](plan.md#phase-3-the-harness-reads-counters)
+still tracks the work. The normative reset and clock requirements remain.
+
 The local-llm harness reads the exporter's counters for the trial's `backend`
 at trial start and trial end, and writes into the row:
 `prefill_tokens`, `prefill_cached_tokens`, `prefill_seconds`, `decode_tokens`,
@@ -323,6 +348,10 @@ harness must refuse a delta across a counter reset. That contract lives in
 local-llm. This repo's job is to make the counters exist and be correct.
 
 ## Rollout
+
+This is the original 2026-09-22 deployment order, retained as historical intent.
+It is not a current fleet status report: ds4 is now compiled and the separate
+Agent is optional. See [plan](plan.md) for implementation/deployment distinctions.
 
 1. Enable the remote-write receiver on the central Prometheus.
 2. The exporter with vLLM, SGLang and llama.cpp adapters, and a Prometheus

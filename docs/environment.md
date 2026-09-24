@@ -1,5 +1,11 @@
 # The environment
 
+Historical snapshot from the 2026-09-22 design investigation. “Today” and
+“currently” below refer to that context, not a new inspection of deployed
+services. Preserve these observations as design evidence; use
+[adapter status](adapters.md) for implemented support and
+[remote-write setup](remote-write.md) for current receiver instructions.
+
 This repo is public. It describes the fleet by role and hardware class only.
 Hostnames, addresses and ports belong in per-host configuration, never here
 (see [`AGENTS.md`](../AGENTS.md)).

@@ -2,6 +2,23 @@
 
 Phases follow `design.md`, *Rollout*. Each item says what "done" is.
 
+## Status interpretation
+
+The original rollout checklist below is retained, including unverified external
+deployment and integration tasks. “Done in 0.1.0” means implemented in the
+checkout, not published: the [changelog](changelog.md) labels 0.1.0 unreleased.
+Built-in remote write, worker/reset boundaries, bounded collection, backlog
+and availability signals, and static targets have since been implemented; see
+the changelog and current operational guides. A separate Agent is now one
+delivery option, not a deployment prerequisite.
+
+Open questions are proposals, not permission to change policy. Publishing
+remains manual until the operator approves a change. Stale registrations remain
+visible as engine down until explicitly deregistered. SGLang pipeline-stage
+counting remains unverified despite the implemented rank filtering. No current
+fleet deployment, release publication or external harness completion is inferred
+from these checkboxes.
+
 ## Phase 1: the exporter core — done in 0.1.0
 
 - [x] Canonical schema, one place (`internal/metrics`), with tests that every
