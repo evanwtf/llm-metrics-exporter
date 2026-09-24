@@ -22,7 +22,7 @@ within their scope. There is no universally required companion document.
 | Changing measurement, labels, queries or collector lifecycle | [Design](docs/design.md), [adapter semantics](docs/adapters.md) |
 | Adding/changing an adapter or fixture | [Adapters](docs/adapters.md), [findings](docs/findings.md), [fixture provenance](testdata/README.md) |
 | Changing registrations or CLI behavior | [CLI](docs/cli.md), [static targets](docs/static-targets.md) |
-| Operating vLLM or changing scrape/service instructions | [Prometheus setup](docs/prometheus-setup.md); [cheat sheet](docs/cheat-sheet.md) for live measurements |
+| Operating vLLM or changing scrape/service instructions | [Quickstart](QUICKSTART.md), [Prometheus setup](docs/prometheus-setup.md); [cheat sheet](docs/cheat-sheet.md) for live measurements |
 | Changing remote-write delivery, queueing or receiver setup | [Remote write](docs/remote-write.md) |
 | Handling credentials, captures or publication hygiene | [Security](docs/security.md) |
 | Building, changing dependencies/CI, publishing or restructuring docs | [Development](docs/development.md) |
@@ -35,6 +35,12 @@ See the [implementation map](docs/development.md#implementation-map-and-change-c
 for parsing, bounded tailing, packaging and test locations.
 
 ## Commands
+
+Optional shortcuts are `make help`, `make build`, `make test`, `make race` and
+`make check`; use `GO="$HOME/go/bin/go"` as a make argument if Go is not on PATH.
+`make check` verifies formatting, vet, dependencies, public hygiene and tests;
+`make -k check` continues independent checks on failure (as in Linux CI).
+Plain Go commands remain supported:
 
 ```sh
 go test ./...                    # all tests; add -race where cgo is available
