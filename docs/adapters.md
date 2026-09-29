@@ -8,7 +8,7 @@ pin each row against a fixture ([`../testdata/README.md`](../testdata/README.md)
 "—" means the engine does not export it, so the exporter emits nothing.
 Absent is "not measured", never zero.
 
-Automatic selection for the three HTTP adapters uses the signatures and model
+Automatic selection for the four HTTP adapters uses the signatures and model
 evidence in [discovery](discovery.md#evidence-identity-and-availability). It
 reuses these mappings unchanged; pinned and log adapters retain their existing
 configuration. Captured-signature tests are in `internal/engines/detect_test.go`.
@@ -155,6 +155,57 @@ ds4: mtp timing margin-skip drafted=2 committed=1 ...
   `DS4_MTP_TIMING` there never is one, and zero would claim "no drafting".
 - On the fixture the totals match local-llm's parser exactly: 362 proposed,
   220 accepted, 57 drafting cycles.
+
+## TensorFold (`tensorfold`, adapter version 1)
+
+Checked against TensorFold v0.3.4 with the patches of
+[jayleaton/glm53-tensorfold-spark](https://github.com/jayleaton/glm53-tensorfold-spark)
+at `e9c8cbb`. Stock TensorFold serves no `/metrics`: its server answers 404,
+so the arm reads as down and every measurement is unavailable, never zero.
+The recipe's patch 0150 adds `GET /metrics` on the API port. Every series has
+one label, `model`, the served name. Discovery reads the model from
+`/v1/models` (`owned_by: "tensorfold"`), and the adapter then requires the
+`model` label to match it.
+
+Every counter moves when a completion finishes. A completion that raises adds
+to `requests_total` and `request_errors_total` only: its tokens and seconds are
+never counted.
+
+| canonical | source | clock | updates |
+|---|---|---|---|
+| `llme_tokens_total{phase="prefill"}` | — (see below) | | |
+| `llme_tokens_total{phase="decode"}` | `tensorfold_completion_tokens_total`: tokens the engine streamed, the first one included | — | finish |
+| `llme_prompt_cached_tokens_total` | `tensorfold_cached_tokens_total`: the resume point of the prompt (session or prefix snapshot) | — | finish |
+| `llme_request_phase_seconds_total{phase="prefill"}` | `tensorfold_prefill_seconds_total`: batch-slot admission (or the start of `generate`) to the first token | request | finish |
+| `llme_request_phase_seconds_total{phase="decode"}` | `tensorfold_decode_seconds_total`: first token to last token | request | finish |
+| `llme_engine_phase_seconds_total` | — | | |
+| `llme_requests_total` | — (`requests_total` has no finish reason) | | |
+| `llme_requests_running` | — (see below) | | |
+| `llme_kv_cache_usage_ratio` | — | | |
+| `llme_time_to_first_token_seconds` | — | | |
+| `llme_spec_*` | — (see below) | | |
+
+Notes:
+
+- **No prefill tokens.** `tensorfold_prompt_tokens_total` counts every prompt
+  token, cached or not. The computed count is `prompt - cached` per request,
+  and it holds in TensorFold's source (prefill runs from the resume point to
+  the end of the prompt). But the schema reads computed tokens from the
+  engine's own counter and never derives them by subtraction (`design.md`,
+  *Prefill tokens are computed tokens*). A computed-token counter upstream
+  would fill this row.
+- **No running gauge.** `tensorfold_requests_inflight` counts every
+  completion inside `generate`. With `GLM53_TF_BATCH`, that includes
+  completions that wait for a batch slot, so it is running plus queued.
+- **No speculative counters.** `tensorfold_decode_rounds_total` counts every
+  decode round, drafted or not, and nothing counts proposed drafts. Accepted
+  tokens would need `completion - rounds - requests`, a derivation that also
+  depends on the first token.
+- `tensorfold_requests_stalled`, `tensorfold_engine_fatal`,
+  `tensorfold_requests_rejected_total` and `tensorfold_uptime_seconds` are
+  health, not measurements, and have no canonical series.
+- A preempted batch request that runs again reports the seconds of its last
+  run only.
 
 ## Not yet built
 

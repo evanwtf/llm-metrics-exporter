@@ -5,6 +5,12 @@ section as the notes and refuses a version without one.
 
 ## 0.1.0 (unreleased)
 
+- TensorFold adapter and discovery, for servers with the glm53-tensorfold-spark
+  recipe's `/metrics` (patch 0150): decode and cached prompt tokens and
+  request-clock phase seconds. Prefill tokens, running requests and
+  speculative counters stay unavailable; `docs/adapters.md` says why. See
+  issue #18.
+
 - Rename every series from `llm_*` to the `llme_` namespace so it cannot collide
   with other tools' `llm_*` series. Engine measurements are `llme_*`; exporter
   state is `llme_exporter_*` (for example `llme_exporter_discovery_status`,

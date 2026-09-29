@@ -3,7 +3,7 @@
 One Prometheus schema for LLM inference throughput, whatever engine is serving.
 
 Every inference host runs one exporter. By default it continuously discovers
-local vLLM, llama.cpp and SGLang servers and infers engine/model identity.
+local vLLM, llama.cpp, SGLang and TensorFold servers and infers engine/model identity.
 Launchers can still pin each model server ("arm") through registrations.
 The exporter reads each server in its own
 dialect (a native `/metrics` endpoint, or a log) and exposes the result under
@@ -145,6 +145,7 @@ supplies which series is in [`docs/adapters.md`](docs/adapters.md); check
 | llama.cpp | `/metrics`, with `--metrics` | yes |
 | SGLang | `/metrics`, with `--enable-metrics` | yes; no phase seconds or speculative counters upstream |
 | ds4 | the `DS4_MTP_TIMING` log | yes; speculative counters |
+| TensorFold | `/metrics`, with the glm53-tensorfold-spark patch 0150 | yes; decode and cached tokens, request-clock seconds; no prefill tokens |
 | mlx-serve | `/metrics`, with `--metrics` | planned |
 | MTPLX | the decode-trace JSONL | planned |
 | Ollama | open | planned |

@@ -97,6 +97,33 @@ two-node tensor-parallel server).
   on some); request series carry `is_streaming`. On the two-node server only
   rank 0 reported.
 
+## TensorFold
+
+Version: TensorFold v0.3.4 (vendored at `2f8e514`) with the patches of
+`jayleaton/glm53-tensorfold-spark` at `e9c8cbb` (source).
+
+- Stock TensorFold's server has `/v1/models` (`owned_by: "tensorfold"`) and a
+  `/health` that always says ok. It has no `/metrics` (source:
+  `src/tensorfold/cuda/server.py`).
+- Patch 0150 (`patches/0150-glm-mia-wins.patch`, `cuda/health.py`) adds
+  `/metrics`: nine counters and four gauges, `tensorfold_*`, each with one
+  `model` label. Values are process totals kept under one lock, and a
+  completion adds all its counters at once when it finishes. A completion that
+  raises adds only to `requests_total` and `request_errors_total` (source).
+- `prompt_tokens` is the whole prompt; `cached` is the prompt position the
+  request resumed from, so the engine computed `prompt - cached` (source:
+  `families/glm5_next/cuda/batch.py`, patched). Patch 0300's request log
+  derives prefill speed the same way.
+- `prefill_s` runs from batch-slot admission to the first token; `decode_s`
+  from the first token to the last. Both are per request, so they are the
+  request clock (source: `batch.py`).
+- `requests_inflight` counts requests inside `generate`. With
+  `GLM53_TF_BATCH` (the recipe's production config sets 4), the app does not
+  serialize requests, so a request waiting for a slot is counted (source:
+  `families/glm5_next/cuda/app.py`).
+- `decode_rounds` is `Stepper.rounds`; the request log's `tokens_per_round`
+  is `(tokens - 1) / rounds` (source: `batch.py`).
+
 ## mlx-serve
 
 Version: `v26.9.1-24-g25de4d5` (source).

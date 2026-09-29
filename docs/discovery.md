@@ -55,6 +55,7 @@ Synthetic switching tests supplement, not replace, those real captures.
 | vLLM | `vllm:generation_tokens_total` plus `vllm:prompt_tokens_by_source_total` or `vllm:cache_config_info` | Unique `model_name` on generation counters |
 | llama.cpp | `llamacpp:tokens_predicted_total` and `llamacpp:prompt_tokens_total` | Unique `model` label, otherwise `/v1/models` |
 | SGLang | `sglang:generation_tokens_total` and `sglang:realtime_tokens_total` | Unique `model_name` on generation counters |
+| TensorFold | `tensorfold_completion_tokens_total` and `tensorfold_prompt_tokens_total` | `/v1/models`; the adapter requires the `model` label to match |
 
 A generic OpenAI API, HTTP 200 or `vllm:` prefix is insufficient. Any
 `mlx_serve:` family vetoes a native vLLM match: mlx-serve is recognized but

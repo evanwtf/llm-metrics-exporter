@@ -26,6 +26,7 @@ Three kinds of provenance:
 | `vllm/stored-qwen3.8-flash-next.promql.json` | stored, 2026-09-15 | vLLM nightly aarch64, about `0.29.1rc1` | speculative decoding and prefix-cache hits, both small |
 | `vllm/stored-gpt-oss-20b.promql.json` | stored, 2026-09-15 | same | 93% of prompt tokens are cache hits; no speculative decoding |
 | `ds4/qwen-mtp-sweep.log` | log | ds4-metal, Qwen MTP path (local-llm evidence 0039) | `Qwen MTP timing` cycle lines inside a real server log |
+| `tensorfold/provisional-patch0150-render.metrics.txt` | **provisional**, rendered 2026-09-29 | TensorFold v0.3.4 + `jayleaton/glm53-tensorfold-spark` @`e9c8cbb` | not a live capture: the output of patch 0150's own `Health.metrics()` (copied from the built image), driven with a fake clock through two finished completions, one error and one in flight. Replace with a live capture |
 | `ollama/ollama-exporter-1.0.1.metrics.txt` | live, 2026-09-22 | `lucabecker42/ollama-exporter:1.0.1` | evidence for `docs/findings.md`: model inventory only, no token counts. No adapter reads it |
 
 The vLLM fixtures are stored, not live, because no vLLM server was running when

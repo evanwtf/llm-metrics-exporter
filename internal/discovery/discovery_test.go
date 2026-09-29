@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -233,5 +234,41 @@ func TestEmptyScopeReportsDiscoveryHealth(t *testing.T) {
 	got := m.Observe(context.Background(), nil)
 	if len(got) != 1 || got[0].State != "discovering" || got[0].Err == nil || got[0].Registration.Engine != metrics.Unknown {
 		t.Fatal("empty scope is silently healthy", got)
+	}
+}
+
+// TensorFold (patch 0150) takes its model from /v1/models; the metrics label
+// must agree, or the observation carries no measurements.
+func TestTensorFoldModelFromMetadata(t *testing.T) {
+	body, err := os.ReadFile("../../testdata/tensorfold/provisional-patch0150-render.metrics.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		id string
+		up bool
+	}{{"GLM-5.3-Flash-EXL3", true}, {"other", false}} {
+		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/v1/models" {
+				fmt.Fprintf(w, `{"object":"list","data":[{"id":%q,"object":"model","owned_by":"tensorfold"}]}`, tc.id)
+				return
+			}
+			_, _ = w.Write(body)
+		}))
+		m := New(Options{Candidates: func(context.Context) ([]Target, error) { return []Target{{URL: s.URL}}, nil }, Timeout: time.Second})
+		o := m.Observe(context.Background(), nil)[0]
+		s.Close()
+		if o.Registration.Engine != "tensorfold" || o.Registration.Model != tc.id || (o.Err == nil) != tc.up {
+			t.Fatalf("%s: %+v", tc.id, o)
+		}
+		decode := -1.0
+		for _, x := range o.Result.Samples {
+			if x.Def.Name == metrics.Tokens.Name && x.Labels[0] == metrics.Decode {
+				decode = x.Value
+			}
+		}
+		if tc.up && decode != 768 || !tc.up && decode != -1 {
+			t.Fatalf("%s: decode tokens %v", tc.id, decode)
+		}
 	}
 }

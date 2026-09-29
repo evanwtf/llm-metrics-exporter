@@ -4,7 +4,7 @@ These rules apply to people and agents alike. This is one Go application:
 one exporter per inference host discovers local HTTP engines or observes pinned
 registrations through HTTP or
 logs, exposes canonical Prometheus metrics, and optionally sends remote write.
-It does not launch models or implement provider billing. Four adapters are
+It does not launch models or implement provider billing. Five adapters are
 implemented; mlx-serve, MTPLX and Ollama remain planned.
 
 ## Change policy and reading map
