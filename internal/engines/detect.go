@@ -7,6 +7,7 @@ import (
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter"
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/llamacpp"
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/sglang"
+	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/tensorfold"
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/vllm"
 	"github.com/evanwtf/llm-metrics-exporter/internal/promtext"
 )
@@ -48,6 +49,12 @@ func Detect(f promtext.Families) (Detection, error) {
 	if f.Has("sglang:generation_tokens_total") && f.Has("sglang:realtime_tokens_total") {
 		matches = append(matches, candidate{sglang.Info, "sglang:generation_tokens_total", "model_name", sglang.Map})
 	}
+	// TensorFold (patch 0150): the model comes from /v1/models, not the label,
+	// and Map then validates the label against it. An empty label names no
+	// model, so it cannot be identity evidence on its own.
+	if f.Has("tensorfold_completion_tokens_total") && f.Has("tensorfold_prompt_tokens_total") {
+		matches = append(matches, candidate{tensorfold.Info, "tensorfold_completion_tokens_total", "", tensorfold.Map})
+	}
 	if len(matches) > 1 || mlx && len(matches) > 0 {
 		return Detection{}, ErrAmbiguous
 	}
@@ -59,6 +66,9 @@ func Detect(f promtext.Families) (Detection, error) {
 	}
 	c := matches[0]
 	d := Detection{Engine: c.info.Engine, Version: c.info.Version, Map: c.mapFn}
+	if c.label == "" {
+		return d, nil
+	}
 	models := f.LabelValues(c.metric, c.label)
 	if len(models) > 1 {
 		return d, ErrAmbiguous

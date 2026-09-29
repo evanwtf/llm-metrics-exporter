@@ -25,7 +25,7 @@ const Version = 1
 // Engines are the valid engine values. An engine here without an adapter is
 // still a valid registration: it exports llme_engine_up 0, which is louder than
 // rejecting the file.
-var Engines = []string{"vllm", "llamacpp", "sglang", "mlx-serve", "ollama", "ds4", "mtplx"}
+var Engines = []string{"vllm", "llamacpp", "sglang", "mlx-serve", "ollama", "ds4", "mtplx", "tensorfold"}
 
 // ErrRunIDMismatch means the registration belongs to a different run.
 var ErrRunIDMismatch = errors.New("registration belongs to a different run_id")
