@@ -240,7 +240,7 @@ func TestEmptyScopeReportsDiscoveryHealth(t *testing.T) {
 // TensorFold (patch 0150) takes its model from /v1/models; the metrics label
 // must agree, or the observation carries no measurements.
 func TestTensorFoldModelFromMetadata(t *testing.T) {
-	body, err := os.ReadFile("../../testdata/tensorfold/provisional-patch0150-render.metrics.txt")
+	body, err := os.ReadFile("../../testdata/tensorfold/v0.3.4-glm53-e9c8cbb.metrics.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,7 +267,7 @@ func TestTensorFoldModelFromMetadata(t *testing.T) {
 				decode = x.Value
 			}
 		}
-		if tc.up && decode != 768 || !tc.up && decode != -1 {
+		if tc.up && decode != 2557 || !tc.up && decode != -1 {
 			t.Fatalf("%s: decode tokens %v", tc.id, decode)
 		}
 	}

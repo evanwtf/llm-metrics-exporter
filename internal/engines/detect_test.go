@@ -16,7 +16,7 @@ func TestDetectCapturedTelemetry(t *testing.T) {
 		{"vllm", "../../testdata/vllm/stored-gpt-oss-20b.promql.json", true},
 		{"llamacpp", "../../testdata/llamacpp/b10809-5266f24da.metrics.txt", false},
 		{"sglang", "../../testdata/sglang/nightly-dev-cu13-20260921-0f6761b5.metrics.txt", false},
-		{"tensorfold", "../../testdata/tensorfold/provisional-patch0150-render.metrics.txt", false},
+		{"tensorfold", "../../testdata/tensorfold/v0.3.4-glm53-e9c8cbb.metrics.txt", false},
 	} {
 		t.Run(tc.engine, func(t *testing.T) {
 			var f promtext.Families

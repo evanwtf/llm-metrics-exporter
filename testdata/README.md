@@ -26,7 +26,9 @@ Three kinds of provenance:
 | `vllm/stored-qwen3.8-flash-next.promql.json` | stored, 2026-09-15 | vLLM nightly aarch64, about `0.29.1rc1` | speculative decoding and prefix-cache hits, both small |
 | `vllm/stored-gpt-oss-20b.promql.json` | stored, 2026-09-15 | same | 93% of prompt tokens are cache hits; no speculative decoding |
 | `ds4/qwen-mtp-sweep.log` | log | ds4-metal, Qwen MTP path (local-llm evidence 0039) | `Qwen MTP timing` cycle lines inside a real server log |
-| `tensorfold/provisional-patch0150-render.metrics.txt` | **provisional**, rendered 2026-09-29 | TensorFold v0.3.4 + `jayleaton/glm53-tensorfold-spark` @`e9c8cbb` | not a live capture: the output of patch 0150's own `Health.metrics()` (copied from the built image), driven with a fake clock through two finished completions, one error and one in flight. Replace with a live capture |
+| `tensorfold/v0.3.4-glm53-e9c8cbb.metrics.txt` | live, 2026-09-29 | TensorFold v0.3.4 + `jayleaton/glm53-tensorfold-spark` @`e9c8cbb` (patch 0150's `/metrics`), two-node GLM-5.3-Flash EXL3, `GLM53_TF_BATCH=4` | `curl` of `/metrics` on the cluster head during a benchmark replay: 32 requests, 175,040 of 250,456 prompt tokens cached |
+| `tensorfold/v0.3.4-glm53-e9c8cbb-warmup.metrics.txt` | live, 2026-09-29 | same | the same server 41 s after start, after its warmup requests: no cache hits yet (a measured zero) |
+| `tensorfold/v0.3.4-glm53-e9c8cbb.models.json` | live, 2026-09-29 | same | `/v1/models`: one id, `owned_by: "tensorfold"` |
 | `ollama/ollama-exporter-1.0.1.metrics.txt` | live, 2026-09-22 | `lucabecker42/ollama-exporter:1.0.1` | evidence for `docs/findings.md`: model inventory only, no token counts. No adapter reads it |
 
 The vLLM fixtures are stored, not live, because no vLLM server was running when
