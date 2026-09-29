@@ -77,8 +77,8 @@ multiple engines can use separate private env files or normal registrations.
 leaves registrations intact. With discovery enabled, a deregistered local
 engine becomes discoverable again; see [automatic discovery](discovery.md).
 
-For ds4, mount its log directory into the exporter at the same absolute path
-as `LLM_ENGINE_LOG_PATH` (see the comments in `compose.yaml`). Path flags do not
+For ds4, and for a TensorFold request log, mount the log's directory into the
+exporter at the same absolute path as `LLM_ENGINE_LOG_PATH` (see the comments in `compose.yaml`). Path flags do not
 create mounts. MTPLX's trace setting is reserved; its adapter remains planned.
 For remote write, see [the sender/service guide](remote-write.md); these engine
 settings do not configure receiver credentials.

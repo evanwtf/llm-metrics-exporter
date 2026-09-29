@@ -28,6 +28,7 @@ Three kinds of provenance:
 | `ds4/qwen-mtp-sweep.log` | log | ds4-metal, Qwen MTP path (local-llm evidence 0039) | `Qwen MTP timing` cycle lines inside a real server log |
 | `tensorfold/v0.3.4-glm53-e9c8cbb.metrics.txt` | live, 2026-09-29 | TensorFold v0.3.4 + `jayleaton/glm53-tensorfold-spark` @`e9c8cbb` (patch 0150's `/metrics`), two-node GLM-5.3-Flash EXL3, `GLM53_TF_BATCH=4` | `curl` of `/metrics` on the cluster head during a benchmark replay: 32 requests, 175,040 of 250,456 prompt tokens cached |
 | `tensorfold/v0.3.4-glm53-e9c8cbb-warmup.metrics.txt` | live, 2026-09-29 | same | the same server 41 s after start, after its warmup requests: no cache hits yet (a measured zero) |
+| `tensorfold/v0.3.4-glm53-e9c8cbb.requests.jsonl` | log, 2026-09-29 | same, `GLM53_TF_REQUEST_LOG` on | patch 0300's request log, copied unchanged from the host at 08:22 EDT during the benchmark replay: 181 lines, 147 `tool_calls` and 34 `stop`. Token ids appear only as hashes |
 | `tensorfold/v0.3.4-glm53-e9c8cbb.models.json` | live, 2026-09-29 | same | `/v1/models`: one id, `owned_by: "tensorfold"` |
 | `ollama/ollama-exporter-1.0.1.metrics.txt` | live, 2026-09-22 | `lucabecker42/ollama-exporter:1.0.1` | evidence for `docs/findings.md`: model inventory only, no token counts. No adapter reads it |
 

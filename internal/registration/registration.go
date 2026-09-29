@@ -156,18 +156,24 @@ func (r Registration) Validate() error {
 	}
 	// A path field on an engine that does not read it is a mistake: the
 	// launcher thinks the exporter is reading a file it is not.
-	checkPath := func(field, value, engine string) {
+	// optional names an engine that may read the path but runs without it.
+	checkPath := func(field, value, engine, optional string) {
 		switch {
 		case r.Engine == engine && value == "":
 			bad("%s is required for engine %s", field, engine)
-		case r.Engine != engine && value != "":
-			bad("%s applies to engine %s only", field, engine)
+		case r.Engine != engine && r.Engine != optional && value != "":
+			if optional != "" {
+				bad("%s applies to engines %s and %s only", field, engine, optional)
+			} else {
+				bad("%s applies to engine %s only", field, engine)
+			}
 		case value != "" && !filepath.IsAbs(value):
 			bad("%s %q is not absolute", field, value)
 		}
 	}
-	checkPath("log_path", r.LogPath, "ds4")
-	checkPath("trace_path", r.TracePath, "mtplx")
+	// TensorFold: the request log (GLM53_TF_REQUEST_LOG), when it is on.
+	checkPath("log_path", r.LogPath, "ds4", "tensorfold")
+	checkPath("trace_path", r.TracePath, "mtplx", "")
 	return errors.Join(errs...)
 }
 
