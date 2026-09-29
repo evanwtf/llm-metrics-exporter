@@ -51,28 +51,30 @@ func TestParseJSON(t *testing.T) {
 func TestParseRejects(t *testing.T) {
 	replace := func(old, new string) string { return strings.Replace(validYAML, old, new, 1) }
 	cases := map[string]struct{ body, file string }{
-		"no version":          {replace("version: 1\n", ""), "qwen36dense.yaml"},
-		"version 2":           {replace("version: 1", "version: 2"), "qwen36dense.yaml"},
-		"unknown field":       {validYAML + "colour: blue\n", "qwen36dense.yaml"},
-		"typo of a field":     {replace("served_model", "servedmodel"), "qwen36dense.yaml"},
-		"unknown engine":      {replace("engine: vllm", "engine: tgi"), "qwen36dense.yaml"},
-		"no model":            {replace("model: qwen3.6-27b\n", ""), "qwen36dense.yaml"},
-		"model with space":    {replace("model: qwen3.6-27b", "model: qwen 3.6"), "qwen36dense.yaml"},
-		"nodes zero":          {replace("nodes: 2", "nodes: 0"), "qwen36dense.yaml"},
-		"no nodes":            {replace("nodes: 2\n", ""), "qwen36dense.yaml"},
-		"endpoint not http":   {replace("http://127.0.0.1:8000", "127.0.0.1:8000"), "qwen36dense.yaml"},
-		"endpoint with path":  {replace("http://127.0.0.1:8000", "http://127.0.0.1:8000/v1"), "qwen36dense.yaml"},
-		"backend not file":    {validYAML, "other.yaml"},
-		"backend bad chars":   {replace("backend: qwen36dense", "backend: ../x"), "../x.yaml"},
-		"negative issue":      {replace("issue: 648", "issue: -1"), "qwen36dense.yaml"},
-		"log_path on vllm":    {validYAML + "log_path: /tmp/x\n", "qwen36dense.yaml"},
-		"trace_path on vllm":  {validYAML + "trace_path: /tmp/x\n", "qwen36dense.yaml"},
-		"two documents":       {validYAML + "---\n" + validYAML, "qwen36dense.yaml"},
-		"empty":               {"", "qwen36dense.yaml"},
-		"not a mapping":       {"- 1\n- 2\n", "qwen36dense.yaml"},
-		"relative log_path":   {ds4YAML("log_path: ds4.log"), "b.yaml"},
-		"ds4 without a log":   {ds4YAML(""), "b.yaml"},
-		"mtplx without trace": {strings.Replace(ds4YAML(""), "engine: ds4", "engine: mtplx", 1), "b.yaml"},
+		"no version":               {replace("version: 1\n", ""), "qwen36dense.yaml"},
+		"version 2":                {replace("version: 1", "version: 2"), "qwen36dense.yaml"},
+		"unknown field":            {validYAML + "colour: blue\n", "qwen36dense.yaml"},
+		"typo of a field":          {replace("served_model", "servedmodel"), "qwen36dense.yaml"},
+		"unknown engine":           {replace("engine: vllm", "engine: tgi"), "qwen36dense.yaml"},
+		"no model":                 {replace("model: qwen3.6-27b\n", ""), "qwen36dense.yaml"},
+		"model with space":         {replace("model: qwen3.6-27b", "model: qwen 3.6"), "qwen36dense.yaml"},
+		"nodes zero":               {replace("nodes: 2", "nodes: 0"), "qwen36dense.yaml"},
+		"no nodes":                 {replace("nodes: 2\n", ""), "qwen36dense.yaml"},
+		"endpoint not http":        {replace("http://127.0.0.1:8000", "127.0.0.1:8000"), "qwen36dense.yaml"},
+		"endpoint with path":       {replace("http://127.0.0.1:8000", "http://127.0.0.1:8000/v1"), "qwen36dense.yaml"},
+		"backend not file":         {validYAML, "other.yaml"},
+		"backend bad chars":        {replace("backend: qwen36dense", "backend: ../x"), "../x.yaml"},
+		"negative issue":           {replace("issue: 648", "issue: -1"), "qwen36dense.yaml"},
+		"log_path on vllm":         {validYAML + "log_path: /tmp/x\n", "qwen36dense.yaml"},
+		"trace_path on vllm":       {validYAML + "trace_path: /tmp/x\n", "qwen36dense.yaml"},
+		"two documents":            {validYAML + "---\n" + validYAML, "qwen36dense.yaml"},
+		"empty":                    {"", "qwen36dense.yaml"},
+		"not a mapping":            {"- 1\n- 2\n", "qwen36dense.yaml"},
+		"relative log_path":        {ds4YAML("log_path: ds4.log"), "b.yaml"},
+		"ds4 without a log":        {ds4YAML(""), "b.yaml"},
+		"mtplx without trace":      {strings.Replace(ds4YAML(""), "engine: ds4", "engine: mtplx", 1), "b.yaml"},
+		"tensorfold relative log":  {strings.Replace(ds4YAML("log_path: r.jsonl"), "engine: ds4", "engine: tensorfold", 1), "b.yaml"},
+		"trace_path on tensorfold": {strings.Replace(ds4YAML("trace_path: /tmp/x"), "engine: ds4", "engine: tensorfold", 1), "b.yaml"},
 	}
 	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -244,5 +246,20 @@ func TestInvalidCarriesItsOwnEngineAndModel(t *testing.T) {
 	}
 	if invalid[1].Engine != "unknown" || invalid[1].Model != "unknown" {
 		t.Errorf("b.yaml: %+v", invalid[1])
+	}
+}
+
+// TensorFold's request log is optional: without it the adapter reads
+// /metrics only.
+func TestTensorFoldLogIsOptional(t *testing.T) {
+	for _, extra := range []string{"", "log_path: /tmp/requests.jsonl"} {
+		body := strings.Replace(ds4YAML(extra), "engine: ds4", "engine: tensorfold", 1)
+		r, err := Parse([]byte(body), "b.yaml")
+		if err != nil {
+			t.Fatalf("%q: %v", extra, err)
+		}
+		if extra != "" && r.LogPath != "/tmp/requests.jsonl" {
+			t.Fatalf("log_path %q", r.LogPath)
+		}
 	}
 }

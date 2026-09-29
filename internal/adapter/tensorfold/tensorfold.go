@@ -12,11 +12,15 @@ import (
 	"github.com/evanwtf/llm-metrics-exporter/internal/promtext"
 )
 
-// Info registers the adapter.
+// Info registers the adapter. Without log_path it reads /metrics only; with
+// it, it also counts finished requests from the request log.
 var Info = adapter.Info{
 	Engine:  "tensorfold",
-	Version: "1",
+	Version: "2",
 	New: func(c adapter.Config) adapter.Adapter {
+		if c.LogPath != "" {
+			return &LogAdapter{cfg: c}
+		}
 		return &adapter.Pull{Config: c, Map: Map}
 	},
 }

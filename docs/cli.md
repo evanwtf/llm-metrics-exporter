@@ -30,7 +30,8 @@ level falls back to info.
 (exported identity), and `--backend` (deployment identity and filename).
 Optional flags are `--nodes` (default 1, allowed 1–64), `--run-id` (default
 `static`), `--issue` (default 0), and `--served-model` (upstream model filter and
-validation). ds4 requires an absolute `--log-path`; the reserved MTPLX engine
+validation). ds4 requires an absolute `--log-path`; TensorFold takes an optional one, its
+request log (`GLM53_TF_REQUEST_LOG`); the reserved MTPLX engine
 requires an absolute `--trace-path`, but its adapter is not implemented.
 
 `deregister` requires `--backend` and `--run-id`; retain the launcher's run ID

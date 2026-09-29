@@ -123,6 +123,16 @@ Version: TensorFold v0.3.4 (vendored at `2f8e514`) with the patches of
   `families/glm5_next/cuda/app.py`).
 - `decode_rounds` is `Stepper.rounds`; the request log's `tokens_per_round`
   is `(tokens - 1) / rounds` (source: `batch.py`).
+- Patch 0300's request log (`reqlog.py`) writes one JSON line per request
+  after it ends, errors and cancels included, with `finish` one of `stop`,
+  `length`, `tool_calls`, `cancelled`, `error`. A preempted background request
+  is re-queued, not ended, so it writes one line (source).
+- The log has no first-token time. `first_s` is set by the first call to the
+  app's emit, which only fires for visible text: live, 95 of 181 lines have
+  `first_s: null`, and one line's `first_s` (13.385 s) is its prefill plus its
+  whole decode. `queued_s` counts from the original submission, so for 9
+  re-queued title requests `queue_s + prefill_s` exceeds `first_s` by up to
+  148.8 s (live, `testdata/tensorfold/*.requests.jsonl`).
 
 ## mlx-serve
 

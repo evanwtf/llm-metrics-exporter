@@ -156,7 +156,7 @@ ds4: mtp timing margin-skip drafted=2 committed=1 ...
 - On the fixture the totals match local-llm's parser exactly: 362 proposed,
   220 accepted, 57 drafting cycles.
 
-## TensorFold (`tensorfold`, adapter version 1)
+## TensorFold (`tensorfold`, adapter version 2)
 
 Checked against TensorFold v0.3.4 with the patches of
 [jayleaton/glm53-tensorfold-spark](https://github.com/jayleaton/glm53-tensorfold-spark)
@@ -171,6 +171,17 @@ Every counter moves when a completion finishes. A completion that raises adds
 to `requests_total` and `request_errors_total` only: its tokens and seconds are
 never counted.
 
+**Request log (optional).** With `GLM53_TF_REQUEST_LOG=<file>` (patch 0300),
+rank 0 appends one JSON line per request. A pinned registration with
+`log_path` set to that file adds finished requests by finish reason. These
+counts are exporter-owned: they are read from the start of the file, so they
+mean "since this log began", and they reset when the log rotates (at
+`GLM53_TF_REQUEST_LOG_MB`, 64 MiB by default) or is replaced. A log that does
+not exist yet is no requests, not an error: TensorFold creates it at the first
+request. Discovery cannot know the path, so an automatically discovered server
+reads `/metrics` only. Mount the log's directory into the exporter at the same
+path, as for ds4 ([compose](compose.md)).
+
 | canonical | source | clock | updates |
 |---|---|---|---|
 | `llme_tokens_total{phase="prefill"}` | — (see below) | | |
@@ -179,7 +190,7 @@ never counted.
 | `llme_request_phase_seconds_total{phase="prefill"}` | `tensorfold_prefill_seconds_total`: batch-slot admission (or the start of `generate`) to the first token | request | finish |
 | `llme_request_phase_seconds_total{phase="decode"}` | `tensorfold_decode_seconds_total`: first token to last token | request | finish |
 | `llme_engine_phase_seconds_total` | — | | |
-| `llme_requests_total` | — (`requests_total` has no finish reason) | | |
+| `llme_requests_total{status}` | request log `finish`: `stop`, `length`, `tool_calls`, `cancelled`, `error` (log only; `/metrics` `requests_total` has no finish reason) | — | line |
 | `llme_requests_running` | — (see below) | | |
 | `llme_kv_cache_usage_ratio` | — | | |
 | `llme_time_to_first_token_seconds` | — | | |
@@ -206,6 +217,29 @@ Notes:
   health, not measurements, and have no canonical series.
 - A preempted batch request that runs again reports the seconds of its last
   run only.
+- `tool_calls` is TensorFold's own finish reason (the OpenAI API value). vLLM
+  counts the same ending as `stop`, so compare finish reasons across engines
+  with care.
+
+### Dashboard panels that stay empty for TensorFold
+
+The DGX Spark overview dashboard (`dgx-spark-overview`) has eleven `llme_`
+panels. For `engine="tensorfold"` these stay empty on purpose. Each needs an
+upstream change, not an exporter change. Sources checked: patch 0150
+(`cuda/health.py`), patch 0300 (`families/glm5_next/cuda/reqlog.py`) and the
+patched `batch.py` and `app.py` in the recipe's image at `e9c8cbb`.
+
+| panel | needs | why TensorFold cannot fill it honestly | upstream change that would fill it |
+|---|---|---|---|
+| Prefill tok/s; Prefix-cache share (and the share line in "KV cache usage & prefix-cache share"); the prefill line of "Throughput by engine & phase" | `llme_tokens_total{phase="prefill"}` | `/metrics` and the request log have prompt tokens and cached tokens only. Computed tokens would be `prompt - cached`, and the schema never derives them by subtraction (`design.md`). A preempted request also prefills twice, which a subtraction would miss | a `tensorfold_prefill_tokens_total` counter of the rows `prefill()` actually ran |
+| Time to first token | `llme_time_to_first_token_seconds` | No histogram in `/metrics`. The request log's `first_s` is arrival to the first *visible* streamed delta: it is null for 95 of 181 requests in the fixture (tool calls whose text is held back) and was 1.04 s after the first token for one request (stop holdback). `queue_s + prefill_s` is not a first-token time either: a preempted background request re-queues, and 9 of the 181 read up to 148.8 s later than their real first delta | a TTFT histogram in `/metrics`, or a per-request first-token time taken at the first token of the final run |
+| Running requests | `llme_requests_running` | `tensorfold_requests_inflight` counts every request inside `generate`. With `GLM53_TF_BATCH`, that includes requests waiting for a batch slot | a gauge of occupied batch slots (and one of queued requests) |
+| KV cache usage (the ratio line) | `llme_kv_cache_usage_ratio` | Nothing in `/metrics`. The log's `kv_free` is a pool snapshot at one request's admission, not a live gauge | a gauge of KV-pool pages in use over pool size |
+| Speculative decoding acceptance | `llme_spec_draft_tokens_total`, `llme_spec_accepted_tokens_total` | `decode_rounds_total` counts every round, drafted or not. Neither `/metrics` nor the log counts proposed drafts, so no ratio can be formed | counters of drafted and accepted tokens (the batch stepper already keeps `drafted` and `accepted`) |
+
+"Finished requests by reason" fills only for a pinned registration with the
+request log. Serving, Decode tok/s, the decode line of "Throughput by engine &
+phase" and "Exporter collection errors" fill from `/metrics` alone.
 
 ## Not yet built
 

@@ -304,7 +304,7 @@ func register(args []string, out io.Writer) int {
 	fl.IntVar(&r.Nodes, "nodes", 1, "physical nodes the server spans")
 	fl.IntVar(&r.Issue, "issue", 0, "tracking issue number")
 	fl.StringVar(&r.ServedModel, "served-model", "", "model name the engine reports; enables validation")
-	fl.StringVar(&r.LogPath, "log-path", "", "absolute path of the ds4 log")
+	fl.StringVar(&r.LogPath, "log-path", "", "absolute path of the ds4 log, or of the TensorFold request log (optional)")
 	fl.StringVar(&r.TracePath, "trace-path", "", "absolute path of the MTPLX decode trace")
 	if err := fl.Parse(args); err != nil {
 		return exitUsage

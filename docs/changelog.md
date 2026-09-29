@@ -11,6 +11,11 @@ section as the notes and refuses a version without one.
   speculative counters stay unavailable; `docs/adapters.md` says why. See
   issue #18.
 
+- TensorFold finished requests by finish reason, from the recipe's request log
+  (patch 0300) when a registration sets `log_path`. `docs/adapters.md` lists
+  the dashboard panels that stay empty for TensorFold, why, and the upstream
+  change each needs.
+
 - Rename every series from `llm_*` to the `llme_` namespace so it cannot collide
   with other tools' `llm_*` series. Engine measurements are `llme_*`; exporter
   state is `llme_exporter_*` (for example `llme_exporter_discovery_status`,
