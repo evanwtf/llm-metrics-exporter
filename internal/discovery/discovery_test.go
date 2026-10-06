@@ -272,3 +272,46 @@ func TestTensorFoldModelFromMetadata(t *testing.T) {
 		}
 	}
 }
+
+// TensorFold's own /metrics (v0.6, the MiaAI-Lab recipe) labels no model, so
+// identity comes from /v1/models alone. Both fixtures are served unchanged.
+func TestTensorFoldNativeModelFromMetadata(t *testing.T) {
+	body, err := os.ReadFile("../../testdata/tensorfold/v0.6.0-miaai-glm-v1.8.metrics.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	models, err := os.ReadFile("../../testdata/tensorfold/v0.6.0-miaai-glm-v1.8.models.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/models" {
+			_, _ = w.Write(models)
+			return
+		}
+		_, _ = w.Write(body)
+	}))
+	defer s.Close()
+	m := New(Options{Candidates: func(context.Context) ([]Target, error) { return []Target{{URL: s.URL}}, nil }, Timeout: time.Second})
+	o := m.Observe(context.Background(), nil)[0]
+	if o.Err != nil || o.State != "ready" || o.Registration.Engine != "tensorfold" || o.Registration.Model != "GLM-5.3-Flash-EXL3" {
+		t.Fatalf("%+v", o)
+	}
+	got := map[string]float64{}
+	for _, x := range o.Result.Samples {
+		if x.Hist == nil {
+			got[x.Def.Name+"/"+strings.Join(x.Labels, ",")] = x.Value
+		}
+	}
+	for k, want := range map[string]float64{
+		metrics.Tokens.Name + "/" + metrics.Decode: 504646,
+		metrics.PromptCachedTokens.Name + "/":      39296704,
+		metrics.RequestsRunning.Name + "/":         1,
+		metrics.SpecDraftTokens.Name + "/":         532754,
+		metrics.SpecAcceptedTokens.Name + "/":      354764,
+	} {
+		if v, ok := got[k]; !ok || v != want {
+			t.Errorf("%s: %v (present %v), want %v", k, v, ok, want)
+		}
+	}
+}

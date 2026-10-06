@@ -30,6 +30,8 @@ Three kinds of provenance:
 | `tensorfold/v0.3.4-glm53-e9c8cbb-warmup.metrics.txt` | live, 2026-09-29 | same | the same server 41 s after start, after its warmup requests: no cache hits yet (a measured zero) |
 | `tensorfold/v0.3.4-glm53-e9c8cbb.requests.jsonl` | log, 2026-09-29 | same, `GLM53_TF_REQUEST_LOG` on | patch 0300's request log, copied unchanged from the host at 08:22 EDT during the benchmark replay: 181 lines, 147 `tool_calls` and 34 `stop`. Token ids appear only as hashes |
 | `tensorfold/v0.3.4-glm53-e9c8cbb.models.json` | live, 2026-09-29 | same | `/v1/models`: one id, `owned_by: "tensorfold"` |
+| `tensorfold/v0.6.0-miaai-glm-v1.8.metrics.txt` | live, 2026-10-06 | TensorFold v0.6.0 + `MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold` v1.8 (image `v0.6.0-31557ed1cef6`, 82 patches; patch 0045 adds `tensorfold_health:*`), two-node GLM-5.3-Flash EXL3 with a DFlash2 drafter | TensorFold's own `/metrics` on the cluster head under load: 1,049 finished requests, 39,296,704 of 40,840,385 prompt tokens cached, 354,764 of 532,754 draft tokens kept. No series has a model label |
+| `tensorfold/v0.6.0-miaai-glm-v1.8.models.json` | live, 2026-10-06 | same | `/v1/models`: one id, `GLM-5.3-Flash-EXL3`, `owned_by: "tensorfold"` |
 | `ollama/ollama-exporter-1.0.1.metrics.txt` | live, 2026-09-22 | `lucabecker42/ollama-exporter:1.0.1` | evidence for `docs/findings.md`: model inventory only, no token counts. No adapter reads it |
 
 The vLLM fixtures are stored, not live, because no vLLM server was running when
