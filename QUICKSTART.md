@@ -2,8 +2,8 @@
 
 Run from the cloned repository root. Choose native or Docker, not both on the
 same port. Start a supported local engine with metrics enabled: vLLM,
-llama.cpp (`--metrics`), SGLang (`--enable-metrics`), or TensorFold with the
-glm53-tensorfold-spark recipe's `/metrics` (patch 0150). This exporter observes
+llama.cpp (`--metrics`), SGLang (`--enable-metrics`), or TensorFold (v0.6's own
+`/metrics`, or v0.3.4 with the glm53-tensorfold-spark patch 0150). This exporter observes
 engines; it never launches models or sends inference requests.
 
 ## Native: Linux or macOS

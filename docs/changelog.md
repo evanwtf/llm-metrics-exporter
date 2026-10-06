@@ -5,6 +5,13 @@ section as the notes and refuses a version without one.
 
 ## 0.1.0 (unreleased)
 
+- TensorFold v0.6's own `/metrics` (the MiaAI-Lab GLM recipe): discovery
+  detects it, and the adapter (now version 3) maps decode and cached prompt
+  tokens, request-clock phase seconds, running requests, time to first token,
+  and drafted and accepted speculative tokens. Before this, those servers
+  read `unknown telemetry signature`. Each TensorFold exposition matches one
+  mapping only; a body with both is ambiguous. See issue #21.
+
 - TensorFold adapter and discovery, for servers with the glm53-tensorfold-spark
   recipe's `/metrics` (patch 0150): decode and cached prompt tokens and
   request-clock phase seconds. Prefill tokens, running requests and

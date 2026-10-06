@@ -253,7 +253,7 @@ proxy-versus-log decision. mlx-serve is likewise a planned pass-through adapter.
 | llama.cpp | GET `/metrics` (needs `--metrics`), rename; detects the 2026-08-13 metrics rewrite | v0.1 |
 | SGLang | GET `/metrics` (needs `--enable-metrics`), rename | v0.1; no phase seconds, no spec counters (see `adapters.md`) |
 | ds4 | tail the `DS4_MTP_TIMING` log | v0.1; speculative counters only |
-| TensorFold | GET `/metrics` (needs the glm53-tensorfold-spark patch 0150), rename | v0.1; decode and cached tokens, request-clock seconds (see `adapters.md`) |
+| TensorFold | GET `/metrics` (v0.6's own, or v0.3.4 with the glm53-tensorfold-spark patch 0150), rename | v0.1; decode and cached tokens, request-clock seconds; v0.6 adds running requests, TTFT and speculative counters (see `adapters.md`) |
 | mlx-serve | GET `/metrics` (needs `--metrics`), rename | next; needs a captured fixture |
 | MTPLX | tail the decode-trace JSONL | next; needs a captured fixture |
 | Ollama | **open**: no Prometheus surface, and the deployed third-party exporter reports model inventory only | later |
