@@ -3,7 +3,7 @@
 Each release's notes are its section here. The publish workflow uses the
 section as the notes and refuses a version without one.
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-10-06)
 
 - TensorFold v0.6's own `/metrics` (the MiaAI-Lab GLM recipe): discovery
   detects it, and the adapter (now version 3) maps decode and cached prompt

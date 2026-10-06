@@ -113,7 +113,7 @@ disagrees with `internal/version`, an existing tag, or a version without a
 changelog section. It tests, builds four zips, runs the linux/amd64 binary from
 its zip, and creates the tag and GitHub release with that changelog section as
 the notes. Documentation of this workflow is not evidence that a release has
-already been published; the changelog currently labels 0.1.0 unreleased.
+already been published: check the repository's Releases page.
 
 Each release archive is `llm-metrics-exporter-<version>-<os>-<arch>.zip`, for
 darwin/linux × arm64/amd64, containing the binary, LICENSE and README. A macOS
