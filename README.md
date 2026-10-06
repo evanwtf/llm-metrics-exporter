@@ -145,7 +145,7 @@ supplies which series is in [`docs/adapters.md`](docs/adapters.md); check
 | llama.cpp | `/metrics`, with `--metrics` | yes |
 | SGLang | `/metrics`, with `--enable-metrics` | yes; no phase seconds or speculative counters upstream |
 | ds4 | the `DS4_MTP_TIMING` log | yes; speculative counters |
-| TensorFold | `/metrics`, with the glm53-tensorfold-spark patch 0150 | yes; decode and cached tokens, request-clock seconds; no prefill tokens |
+| TensorFold | `/metrics`: v0.6's own (the MiaAI-Lab recipe), or v0.3.4 with the glm53-tensorfold-spark patch 0150 | yes; decode and cached tokens, request-clock seconds; v0.6 also running requests, TTFT and speculative counters; no prefill tokens |
 | mlx-serve | `/metrics`, with `--metrics` | planned |
 | MTPLX | the decode-trace JSONL | planned |
 | Ollama | open | planned |

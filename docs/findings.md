@@ -134,6 +134,33 @@ Version: TensorFold v0.3.4 (vendored at `2f8e514`) with the patches of
   re-queued title requests `queue_s + prefill_s` exceeds `first_s` by up to
   148.8 s (live, `testdata/tensorfold/*.requests.jsonl`).
 
+### TensorFold v0.6 (MiaAI-Lab recipe)
+
+Version: TensorFold v0.6.0 with the MiaAI-Lab GLM recipe v1.8 (image
+`v0.6.0-31557ed1cef6`, 82 patches); source is upstream `v0.6.0` plus the
+recipe's `patches/0045-cuda-metrics.patch`.
+
+- TensorFold v0.6 serves its own `/metrics` (`src/tensorfold/server/metrics.py`):
+  `tensorfold:*` families with no model label. Patch 0045 appends the CUDA
+  server's `/health` fields as `tensorfold_health:*` (source).
+- `cuda/health.py` folds every request when its `generate` returns, in a
+  `finally`, so a request that raises is counted too. The fold adds
+  `len(out)` to `generation_tokens_total` and `completion_tokens_total`, and
+  the engine's per-request `prefill_s`, `decode_s`, `cached`, `rounds`,
+  `drafted` and `accepted` stats to their totals (source).
+- `completion_tokens_total` at scrape time adds the running requests' tokens
+  so far; `generation_tokens_total` does not (source; live: 504,733 against
+  504,646 with one request running).
+- `kv_cache_usage_ratio{pool}` is one sample per live stream: its tokens over
+  the effective context window. It is not cache-pool use (source: `_pools`).
+  Live, it read 0.0767 while the pool was 17.4% used (423,936 of 2,433,024
+  rows held by streams or kept prompts).
+- TTFT runs from arrival to the first token in `out`; latency from arrival to
+  the end of `generate` (source). Live, TTFT sum plus decode seconds
+  (9,843.9 s) is within 0.7 s of the latency sum (9,844.6 s).
+- Live, `generation = rounds + accepted + requests` exactly: 148,833 +
+  354,764 + 1,049 = 504,646.
+
 ## mlx-serve
 
 Version: `v26.9.1-24-g25de4d5` (source).

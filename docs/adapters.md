@@ -156,7 +156,83 @@ ds4: mtp timing margin-skip drafted=2 committed=1 ...
 - On the fixture the totals match local-llm's parser exactly: 362 proposed,
   220 accepted, 57 drafting cycles.
 
-## TensorFold (`tensorfold`, adapter version 2)
+## TensorFold (`tensorfold`, adapter version 3)
+
+TensorFold has two `/metrics` expositions, and the adapter maps each with its
+own table. Each has a signature of two counters. A body with both is refused
+(pinned) or `ambiguous` (discovery), so no exposition matches both mappings.
+
+| exposition | signature | model |
+|---|---|---|
+| TensorFold v0.6's own (`tensorfold/server/metrics.py`), as the MiaAI-Lab recipe serves it | `tensorfold:generation_tokens_total` and `tensorfold:prompt_tokens_total` | no label; `/v1/models` only |
+| patch 0150 of the glm53-tensorfold-spark recipe, on TensorFold v0.3.4 | `tensorfold_completion_tokens_total` and `tensorfold_prompt_tokens_total` | `model` label, checked against `/v1/models` |
+
+Adapter version 3 adds the v0.6 mapping. The patch 0150 mapping is unchanged
+from version 2.
+
+### TensorFold v0.6 (MiaAI-Lab recipe)
+
+Checked against TensorFold v0.6.0 with the
+[MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold](https://github.com/MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold)
+recipe v1.8 (image `v0.6.0-31557ed1cef6`), and against upstream
+`src/tensorfold/server/metrics.py` and `src/tensorfold/cuda/health.py` at
+`v0.6.0`. The `tensorfold:*` families are upstream's. The recipe's patch
+0045 adds `tensorfold_health:*`, the CUDA server's `/health` fields. Without
+that patch, the rows that read `tensorfold_health:*` stay absent.
+
+No series has a model label. Discovery reads the model from `/v1/models`
+(`owned_by: "tensorfold"`). A pinned registration cannot validate
+`served_model` against the engine.
+
+The counters and histograms count finished requests. TensorFold folds a
+request when its `generate` returns, a request that raises included.
+
+| canonical | source | clock | updates |
+|---|---|---|---|
+| `llme_tokens_total{phase="prefill"}` | — (see below) | | |
+| `llme_tokens_total{phase="decode"}` | `tensorfold:generation_tokens_total`: the reply's tokens, the first one included | — | finish |
+| `llme_prompt_cached_tokens_total` | `tensorfold_health:cached_tokens_total`: prompt tokens the engine found cached | — | finish |
+| `llme_request_phase_seconds_total{phase="prefill"}` | `tensorfold_health:prefill_seconds_total`: each request's own engine prefill time | request | finish |
+| `llme_request_phase_seconds_total{phase="decode"}` | `tensorfold_health:decode_seconds_total`: each request's own engine decode time | request | finish |
+| `llme_engine_phase_seconds_total` | — | | |
+| `llme_requests_total{status}` | — (`tensorfold_health:requests_total` has no finish reason) | | |
+| `llme_requests_running` | `tensorfold:requests_running`: streams that decode or fill now | — | per scrape |
+| `llme_kv_cache_usage_ratio` | — (see below) | | |
+| `llme_time_to_first_token_seconds` | `tensorfold:time_to_first_token_seconds`: arrival to the first generated token | request | finish |
+| `llme_spec_draft_tokens_total` | `tensorfold:mtp_drafted_total`: drafter tokens verified | — | finish |
+| `llme_spec_accepted_tokens_total` | `tensorfold:mtp_accepted_total`: drafter tokens kept | — | finish |
+| `llme_spec_verify_steps_total` | — (see below) | | |
+
+Notes:
+
+- **No prefill tokens**, for the same reason as patch 0150:
+  `tensorfold:prompt_tokens_total` counts cached tokens too (40,840,385
+  prompt tokens, 39,296,704 of them cached, in the fixture).
+- **Request clock.** The fixture's TTFT sum (1,276.9 s) plus its decode
+  seconds (8,567.0 s) is 9,843.9 s, and its latency sum is 9,844.6 s. So each
+  phase is a per-request interval, summed over requests, and overlapping
+  streams are all counted.
+- **No KV-cache ratio.** `tensorfold:kv_cache_usage_ratio{pool}` is one
+  sample per live stream: that stream's tokens over the context window, not
+  the share of the cache pool in use. `tensorfold_health:pool_tokens` and
+  `pool_free_tokens` give pool use, but the used share counts kept prompts,
+  which vLLM and SGLang count as free (evictable). The two ratios would not
+  mean the same thing.
+- **No verify steps.** `tensorfold_health:rounds_total` counts decode rounds,
+  and nothing says that each round proposed a draft token. In the fixture,
+  `generation = rounds + accepted + requests` holds exactly
+  (148,833 + 354,764 + 1,049 = 504,646): each round emits one target token
+  plus its kept drafts.
+- **No canonical series** for `tensorfold:requests_waiting`,
+  `tensorfold:request_latency_seconds`, `tensorfold_health:streams`,
+  `streams_max`, `context_length`, `kept_prompts` or
+  `completion_tokens_total` (which also counts running replies, so it does
+  not share an interval with the seconds counters).
+- Acceptance rate per arm is
+  `rate(llme_spec_accepted_tokens_total[5m]) / rate(llme_spec_draft_tokens_total[5m])`
+  (0.666 over the fixture's lifetime).
+
+### Patch 0150 (TensorFold v0.3.4)
 
 Checked against TensorFold v0.3.4 with the patches of
 [jayleaton/glm53-tensorfold-spark](https://github.com/jayleaton/glm53-tensorfold-spark)
@@ -222,6 +298,10 @@ Notes:
   with care.
 
 ### Dashboard panels that stay empty for TensorFold
+
+This section covers patch 0150. With TensorFold v0.6, the running-requests,
+time-to-first-token and speculative-acceptance panels fill; prefill tokens
+and the KV-cache ratio stay empty (see the v0.6 notes above).
 
 The DGX Spark overview dashboard (`dgx-spark-overview`) has eleven `llme_`
 panels. For `engine="tensorfold"` these stay empty on purpose. Each needs an

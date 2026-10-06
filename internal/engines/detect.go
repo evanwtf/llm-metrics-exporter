@@ -49,11 +49,15 @@ func Detect(f promtext.Families) (Detection, error) {
 	if f.Has("sglang:generation_tokens_total") && f.Has("sglang:realtime_tokens_total") {
 		matches = append(matches, candidate{sglang.Info, "sglang:generation_tokens_total", "model_name", sglang.Map})
 	}
-	// TensorFold (patch 0150): the model comes from /v1/models, not the label,
-	// and Map then validates the label against it. An empty label names no
-	// model, so it cannot be identity evidence on its own.
-	if f.Has("tensorfold_completion_tokens_total") && f.Has("tensorfold_prompt_tokens_total") {
-		matches = append(matches, candidate{tensorfold.Info, "tensorfold_completion_tokens_total", "", tensorfold.Map})
+	// TensorFold: the model comes from /v1/models, not a label. Patch 0150's
+	// mapping then validates its model label against it; TensorFold v0.6
+	// labels no model. Each exposition is its own candidate, so a body with
+	// both is ambiguous.
+	if tensorfold.IsPatch0150(f) {
+		matches = append(matches, candidate{tensorfold.Info, "", "", tensorfold.MapPatch0150})
+	}
+	if tensorfold.IsNative(f) {
+		matches = append(matches, candidate{tensorfold.Info, "", "", tensorfold.MapNative})
 	}
 	if len(matches) > 1 || mlx && len(matches) > 0 {
 		return Detection{}, ErrAmbiguous
