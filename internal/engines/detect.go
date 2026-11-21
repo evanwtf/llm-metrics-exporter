@@ -1,10 +1,14 @@
 package engines
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter"
+	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/inkling2"
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/llamacpp"
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/sglang"
 	"github.com/evanwtf/llm-metrics-exporter/internal/adapter/tensorfold"
@@ -81,4 +85,31 @@ func Detect(f promtext.Families) (Detection, error) {
 		d.Model = models[0]
 	}
 	return d, nil
+}
+
+// HealthCandidate reports whether a /v1/models body permits a GET /health
+// probe, and returns the model id. Only the Inkling 2 server's shape
+// qualifies. Other engines' /health can have side effects (SGLang's runs a
+// generation), so discovery never reads it.
+func HealthCandidate(models []byte) (string, bool) { return inkling2.IsModels(models) }
+
+// DetectHealth identifies an engine that serves no /metrics by its JSON
+// /health body. Discovery calls it only after /metrics answered with an HTTP
+// error status and HealthCandidate accepted /v1/models. Its /health names no
+// model, so Model is empty. The Result is that snapshot's measurements; Map
+// is nil. A body without the signature wraps ErrUnknown; a known but
+// unsupported version wraps ErrUnsupported; a failed request returns its
+// own error, which is neither.
+func DetectHealth(ctx context.Context, client *http.Client, endpoint string, maxBody int64) (Detection, adapter.Result, error) {
+	h, err := inkling2.Fetch(ctx, adapter.Config{Endpoint: endpoint, Client: client, MaxBody: maxBody})
+	d := Detection{Engine: inkling2.Info.Engine, Version: inkling2.Info.Version}
+	switch {
+	case errors.Is(err, inkling2.ErrMixedSteps):
+		return d, adapter.Result{}, fmt.Errorf("%w: %w", ErrUnsupported, err)
+	case errors.Is(err, inkling2.ErrNotInkling):
+		return Detection{}, adapter.Result{}, fmt.Errorf("%w: %w", ErrUnknown, err)
+	case err != nil:
+		return Detection{}, adapter.Result{}, err
+	}
+	return d, inkling2.Map(h), nil
 }

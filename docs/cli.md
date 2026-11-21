@@ -45,8 +45,8 @@ Pass the same override to all commands and service units. Static YAML requires
 validation. See [discovery](design.md#discovery-arms-register-themselves) for
 model validation, atomic writes and stale-registration policy.
 
-Eight engine names are accepted in registrations, but only `vllm`, `llamacpp`,
-`sglang`, `ds4` and `tensorfold` are compiled adapters. `mlx-serve`, `mtplx` and `ollama` are
+Nine engine names are accepted in registrations, but only `vllm`, `llamacpp`,
+`sglang`, `ds4`, `tensorfold` and `inkling2-exl3` are compiled adapters. `mlx-serve`, `mtplx` and `ollama` are
 planned; registering them does not implement collection and reports engine down.
 
 ## Serving and delivery

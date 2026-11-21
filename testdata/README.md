@@ -32,6 +32,9 @@ Three kinds of provenance:
 | `tensorfold/v0.3.4-glm53-e9c8cbb.models.json` | live, 2026-09-29 | same | `/v1/models`: one id, `owned_by: "tensorfold"` |
 | `tensorfold/v0.6.0-miaai-glm-v1.8.metrics.txt` | live, 2026-10-06 | TensorFold v0.6.0 + `MiaAI-Lab/GLM-5.3-Flash-EXL3-2x-DGX-Sparks-TensorFold` v1.8 (image `v0.6.0-31557ed1cef6`, 82 patches; patch 0045 adds `tensorfold_health:*`), two-node GLM-5.3-Flash EXL3 with a DFlash2 drafter | TensorFold's own `/metrics` on the cluster head under load: 1,049 finished requests, 39,296,704 of 40,840,385 prompt tokens cached, 354,764 of 532,754 draft tokens kept. No series has a model label |
 | `tensorfold/v0.6.0-miaai-glm-v1.8.models.json` | live, 2026-10-06 | same | `/v1/models`: one id, `GLM-5.3-Flash-EXL3`, `owned_by: "tensorfold"` |
+| `inkling2-exl3/299eeaf3-live-busy.health.json` | live, 2026-11-21 | oracle9i88/inkling2-exl3 `server/i2_server.py` at `299eeaf3`, Inkling 2 Small EXL3, rank 0 on the cluster head | `/health` during one 6,500-token decode (`active` 1): 148 prompt tokens computed, 1,002 decode tokens, 4 prefix lookups and no hit (a measured zero). No `gone` key: no client had hung up |
+| `inkling2-exl3/299eeaf3-live-idle.health.json` | live, 2026-11-21 | same | `/health` just after the ready line: every counter 0, `free_pages = kv_tokens/64 - 1` |
+| `inkling2-exl3/299eeaf3-live.models.json` | live, 2026-11-21 | same, `--served-name inkling-2-small` | `/v1/models`: one id, `owned_by: "local"`, `max_model_len` 524288 |
 | `ollama/ollama-exporter-1.0.1.metrics.txt` | live, 2026-09-22 | `lucabecker42/ollama-exporter:1.0.1` | evidence for `docs/findings.md`: model inventory only, no token counts. No adapter reads it |
 
 The vLLM fixtures are stored, not live, because no vLLM server was running when

@@ -16,8 +16,11 @@ repos:
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: check-yaml
+      # Fixtures keep the engine's exact bytes, final newline or not.
       - id: end-of-file-fixer
+        exclude: ^testdata/.*\.(json|jsonl|txt|log)$
       - id: trailing-whitespace
+        exclude: ^testdata/.*\.(json|jsonl|txt|log)$
       - id: detect-private-key
 
   - repo: https://github.com/gitleaks/gitleaks

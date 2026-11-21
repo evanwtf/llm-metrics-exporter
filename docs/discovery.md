@@ -16,7 +16,13 @@ See the [quickstart](../QUICKSTART.md) for native/Compose commands.
   engine user; permissions can limit visible listeners. No elevated privilege
   is requested. Missing/failed enumeration reports `scope_error`.
 - Only plain HTTP `GET /metrics` and, when necessary, `GET /v1/models` are
-  issued. No inference, launch, stop, log discovery or model-loading requests.
+  issued, plus `GET /health` for one server shape only: `/metrics` answered
+  with an HTTP error status, and `/v1/models` lists exactly one model with
+  `owned_by: "local"` and a numeric `max_model_len` (the Inkling 2 server).
+  vLLM, SGLang and llama.cpp report other `owned_by` values, so they never get
+  a `/health` read; SGLang's `/health` runs a generation. A redirect or a
+  timeout on `/metrics` leads to neither. No inference, launch, stop, log
+  discovery or model-loading requests.
   These GETs reach other local services too; if this is undesirable, restrict
   discovery endpoints or disable it. Probes bypass proxy environment variables
   and never follow redirects. There is no engine authentication integration.
@@ -57,8 +63,11 @@ Synthetic switching tests supplement, not replace, those real captures.
 | SGLang | `sglang:generation_tokens_total` and `sglang:realtime_tokens_total` | Unique `model_name` on generation counters |
 | TensorFold (patch 0150) | `tensorfold_completion_tokens_total` and `tensorfold_prompt_tokens_total` | `/v1/models`; the adapter requires the `model` label to match. Finish reasons need a pin with the request log |
 | TensorFold (v0.6) | `tensorfold:generation_tokens_total` and `tensorfold:prompt_tokens_total` | `/v1/models` only: no series has a model label. A body with both TensorFold signatures is `ambiguous` |
+| Inkling 2 (`inkling2-exl3`) | No `/metrics` (an HTTP error status), a `/v1/models` with one model, `owned_by: "local"` and a numeric `max_model_len`, and then a JSON `/health` with `status: "ok"`, the scheduler counters `stats.{pre_tok,pre_time,dec_tok,dec_time,dec_steps,dec_rows,spec_steps,plain_steps}`, `spec`, `kv_tokens`, `active`, `queued` and `prefix.{entries,free_pages}`; other keys (`prefix.lengths`, `stats.gone`) are allowed, not required | `/v1/models` only, read before and after a fresh `/health`. A `/health` with `mix_*` counters is `unsupported`. A failed `/health` request is `unavailable` and keeps the last labels |
 
-A generic OpenAI API, HTTP 200 or `vllm:` prefix is insufficient. Any
+A generic OpenAI API, HTTP 200 or `vllm:` prefix is insufficient. A valid
+`/metrics` body always decides. `/health` is read only as described above,
+and a `/health` without the full Inkling 2 shape leaves the port `unknown`. Any
 `mlx_serve:` family vetoes a native vLLM match: mlx-serve is recognized but
 unsupported. Mixed native signatures or multiple model identities are
 `ambiguous`, with no measurements. Signatures are supported-version evidence,

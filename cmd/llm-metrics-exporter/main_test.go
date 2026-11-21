@@ -179,3 +179,55 @@ func TestDefaultHostFromEnv(t *testing.T) {
 		t.Fatalf("host %q, want the short hostname", h)
 	}
 }
+
+// The Inkling 2 server is registered by its engine label and read from
+// /health; served_model is checked against /v1/models.
+func TestRegisterInkling(t *testing.T) {
+	dir := t.TempDir()
+	health, err := os.ReadFile("../../testdata/inkling2-exl3/299eeaf3-live-busy.health.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	models, err := os.ReadFile("../../testdata/inkling2-exl3/299eeaf3-live.models.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	engine := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/health":
+			_, _ = w.Write(health)
+		case "/v1/models":
+			_, _ = w.Write(models)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer engine.Close()
+	if code, out := runCLI(t, "register", "--registration-dir", dir, "--backend", "inkling2-small",
+		"--engine", "inkling2-exl3", "--endpoint", engine.URL, "--model", "inkling-2-small-exl3",
+		"--served-model", "inkling-2-small", "--nodes", "1", "--run-id", "r"); code != 0 {
+		t.Fatalf("register: %s", out)
+	}
+	h, closeFn := newHandler(serveConfig{dir: dir, host: "h1", timeout: defaultTimeout}, discard())
+	defer closeFn()
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+	resp, err := http.Get(srv.URL + "/metrics")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	id := `backend="inkling2-small",engine="inkling2-exl3",host="h1",model="inkling-2-small-exl3",nodes="1"`
+	for _, want := range []string{
+		`llme_engine_up{` + id + `} 1`,
+		`llme_tokens_total{` + id + `,phase="decode",worker="default"} 1002`,
+		`llme_tokens_total{` + id + `,phase="prefill",worker="default"} 148`,
+		`llme_exporter_metric_available{backend="inkling2-small",engine="inkling2-exl3",host="h1",metric="llme_tokens_total",model="inkling-2-small-exl3",nodes="1",phase="prefill"} 1`,
+		`llme_exporter_arm_info{adapter_version="1",backend="inkling2-small",engine="inkling2-exl3"`,
+	} {
+		if !strings.Contains(string(text), want) {
+			t.Errorf("missing %s in:\n%s", want, text)
+		}
+	}
+}

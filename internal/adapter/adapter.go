@@ -93,7 +93,27 @@ func SelectModel(fams promtext.Families, metric, label, served string) (promtext
 // FetchMetrics GETs <endpoint>/metrics and parses it. It reads at most
 // maxBody bytes; a longer body is an error rather than a truncated parse.
 func FetchMetrics(ctx context.Context, client *http.Client, endpoint string, maxBody int64) (promtext.Families, error) {
-	url := strings.TrimSuffix(endpoint, "/") + "/metrics"
+	body, err := FetchBody(ctx, client, endpoint, "/metrics", maxBody)
+	if err != nil {
+		return nil, err
+	}
+	return promtext.Parse(strings.NewReader(string(body)))
+}
+
+// StatusError means the server answered with a status other than 200. The
+// server is up, so discovery may ask it for another telemetry path.
+type StatusError struct {
+	URL    string
+	Status string
+}
+
+func (e *StatusError) Error() string { return fmt.Sprintf("GET %s: %s", e.URL, e.Status) }
+
+// FetchBody GETs <endpoint><path> and returns at most maxBody bytes. A status
+// other than 200 is a *StatusError; a longer body is an error, not a
+// truncated read.
+func FetchBody(ctx context.Context, client *http.Client, endpoint, path string, maxBody int64) ([]byte, error) {
+	url := strings.TrimSuffix(endpoint, "/") + path
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -104,7 +124,7 @@ func FetchMetrics(ctx context.Context, client *http.Client, endpoint string, max
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GET %s: %s", url, resp.Status)
+		return nil, &StatusError{URL: url, Status: resp.Status}
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBody+1))
 	if err != nil {
@@ -113,7 +133,7 @@ func FetchMetrics(ctx context.Context, client *http.Client, endpoint string, max
 	if int64(len(body)) > maxBody {
 		return nil, fmt.Errorf("GET %s: body larger than %d bytes", url, maxBody)
 	}
-	return promtext.Parse(strings.NewReader(string(body)))
+	return body, nil
 }
 
 // Probe GETs <endpoint><path> and succeeds on any 2xx. Stateful adapters use
