@@ -201,7 +201,7 @@ add `state`; `llme_exporter_discovery_changed_timestamp_seconds` marks rate-wind
 
 | label | required | value | why |
 |---|---|---|---|
-| `engine` | **yes** (operator) | `vllm`, `llamacpp`, `sglang`, `mlx-serve`, `ollama`, `ds4`, `mtplx`, `tensorfold` | the thing being compared |
+| `engine` | **yes** (operator) | `vllm`, `llamacpp`, `sglang`, `mlx-serve`, `ollama`, `ds4`, `mtplx`, `tensorfold`, `inkling2-exl3` | the thing being compared |
 | `model` | **yes** (operator) | the benchmark's model slug, as the arm registers it | joins to benchmark rows and heartbeats |
 | `backend` | yes | the benchmark's backend name | two arms can share engine and model and differ only in flags. Without this their series merge |
 | `host` | yes | the host serving the API (`--host`, default: the short hostname) | where it ran |
@@ -238,7 +238,7 @@ type Adapter interface {
 ```
 
 - **Stateless, pass-through:** vLLM, llama.cpp, SGLang, TensorFold, mlx-serve. `Collect`
-  reads `/metrics`.
+  reads `/metrics`. Inkling 2 is stateless too, but reads its JSON `/health`.
 - **Stateful, accumulating:** ds4, MTPLX, Ollama. `Collect` reads the bytes
   appended to a log since the last call, adds them to running totals, and
   also checks that the endpoint answers.
@@ -254,6 +254,7 @@ proxy-versus-log decision. mlx-serve is likewise a planned pass-through adapter.
 | SGLang | GET `/metrics` (needs `--enable-metrics`), rename | v0.1; no phase seconds, no spec counters (see `adapters.md`) |
 | ds4 | tail the `DS4_MTP_TIMING` log | v0.1; speculative counters only |
 | TensorFold | GET `/metrics` (v0.6's own, or v0.3.4 with the glm53-tensorfold-spark patch 0150), rename | v0.1; decode and cached tokens, request-clock seconds; v0.6 adds running requests, TTFT and speculative counters (see `adapters.md`) |
+| Inkling 2 | GET `/health` (JSON) and `/v1/models` | prefill, decode and cached tokens (see `adapters.md`) |
 | mlx-serve | GET `/metrics` (needs `--metrics`), rename | next; needs a captured fixture |
 | MTPLX | tail the decode-trace JSONL | next; needs a captured fixture |
 | Ollama | **open**: no Prometheus surface, and the deployed third-party exporter reports model inventory only | later |

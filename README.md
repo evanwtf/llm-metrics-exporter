@@ -146,6 +146,7 @@ supplies which series is in [`docs/adapters.md`](docs/adapters.md); check
 | SGLang | `/metrics`, with `--enable-metrics` | yes; no phase seconds or speculative counters upstream |
 | ds4 | the `DS4_MTP_TIMING` log | yes; speculative counters |
 | TensorFold | `/metrics`: v0.6's own (the MiaAI-Lab recipe), or v0.3.4 with the glm53-tensorfold-spark patch 0150 | yes; decode and cached tokens, request-clock seconds; v0.6 also running requests, TTFT and speculative counters; no prefill tokens |
+| Inkling 2 (`inkling2-exl3`) | JSON `/health` of the inkling2-exl3 server (no `/metrics`) | yes; prefill, decode and cached tokens only |
 | mlx-serve | `/metrics`, with `--metrics` | planned |
 | MTPLX | the decode-trace JSONL | planned |
 | Ollama | open | planned |

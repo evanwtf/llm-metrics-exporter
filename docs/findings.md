@@ -161,6 +161,24 @@ recipe's `patches/0045-cuda-metrics.patch`.
 - Live, `generation = rounds + accepted + requests` exactly: 148,833 +
   354,764 + 1,049 = 504,646.
 
+## Inkling 2 (inkling2-exl3)
+
+Version: oracle9i88/inkling2-exl3 `server/i2_server.py` at `299eeaf3`
+(source, and live `/health` and `/v1/models` captures).
+
+- No `/metrics` route: FastAPI answers 404 (source).
+- `GET /health` returns `status`, `stats` (the scheduler's `STATS` dict),
+  `spec`, `kv_tokens`, `active`, `queued` and `prefix` (lines 743-745).
+  `GET /v1/models` returns one id, `--served-name` (lines 766-768).
+- `stats.pre_tok` counts computed prompt tokens only: prefill starts at the
+  restored prefix (lines 522, 587). `stats.prefix_hit_tok` counts the
+  restored tokens (`i2_prefix_cache.py` line 116).
+- `stats.dec_tok` adds `sum(n) + rows` per decode step (line 632), where `n`
+  is the accepted drafts per row; a plain step has `n = 0` (line 232).
+- `pre_time` stops before the GPU finishes a prefill chunk that is not the
+  last (lines 311-337, 587), so the phase seconds do not split engine time
+  correctly. See `adapters.md`.
+
 ## mlx-serve
 
 Version: `v26.9.1-24-g25de4d5` (source).

@@ -1,6 +1,11 @@
 package engines
 
 import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -90,5 +95,42 @@ func TestDetectTensorFoldExpositions(t *testing.T) {
 				t.Error("the detected mapping also accepted the other exposition")
 			}
 		})
+	}
+}
+
+// DetectHealth knows the Inkling 2 /health and nothing else: other engines'
+// fixtures served as /health are unknown.
+func TestDetectHealth(t *testing.T) {
+	for _, tc := range []struct{ path, engine string }{
+		{"../../testdata/inkling2-exl3/299eeaf3-live-busy.health.json", "inkling2-exl3"},
+		{"../../testdata/inkling2-exl3/299eeaf3-live-idle.health.json", "inkling2-exl3"},
+		{"../../testdata/tensorfold/v0.6.0-miaai-glm-v1.8.metrics.txt", ""},
+		{"../../testdata/tensorfold/v0.3.4-glm53-e9c8cbb.metrics.txt", ""},
+		{"../../testdata/llamacpp/b10809-5266f24da.metrics.txt", ""},
+		{"../../testdata/vllm/stored-gpt-oss-20b.promql.json", ""},
+		{"../../testdata/inkling2-exl3/299eeaf3-live.models.json", ""},
+	} {
+		body, err := os.ReadFile(tc.path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/health" {
+				http.NotFound(w, r)
+				return
+			}
+			_, _ = w.Write(body)
+		}))
+		d, res, err := DetectHealth(context.Background(), s.Client(), s.URL, 1<<20)
+		s.Close()
+		if tc.engine == "" {
+			if !errors.Is(err, ErrUnknown) || d.Engine != "" || len(res.Samples) != 0 {
+				t.Errorf("%s: %+v %v, want unknown", tc.path, d, err)
+			}
+			continue
+		}
+		if err != nil || d.Engine != tc.engine || d.Model != "" || len(res.Samples) != 3 {
+			t.Errorf("%s: %+v %v", tc.path, d, err)
+		}
 	}
 }

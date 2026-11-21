@@ -8,7 +8,7 @@ pin each row against a fixture ([`../testdata/README.md`](../testdata/README.md)
 "—" means the engine does not export it, so the exporter emits nothing.
 Absent is "not measured", never zero.
 
-Automatic selection for the four HTTP adapters uses the signatures and model
+Automatic selection for the five HTTP adapters uses the signatures and model
 evidence in [discovery](discovery.md#evidence-identity-and-availability). It
 reuses these mappings unchanged; pinned and log adapters retain their existing
 configuration. Captured-signature tests are in `internal/engines/detect_test.go`.
@@ -320,6 +320,84 @@ patched `batch.py` and `app.py` in the recipe's image at `e9c8cbb`.
 "Finished requests by reason" fills only for a pinned registration with the
 request log. Serving, Decode tok/s, the decode line of "Throughput by engine &
 phase" and "Exporter collection errors" fill from `/metrics` alone.
+
+## Inkling 2 (`inkling2-exl3`, adapter version 1)
+
+The Inkling 2 server of
+[oracle9i88/inkling2-exl3](https://github.com/oracle9i88/inkling2-exl3)
+(`server/i2_server.py`, an exllamav3 overlay) has no `/metrics`: FastAPI
+answers 404. `GET /health` returns JSON with the scheduler's counters since
+start, and `GET /v1/models` names the one served model
+(`--served-name`, `owned_by: "local"`). Only rank 0 serves HTTP. The label is
+`inkling2-exl3`, not `exllamav3`: the API is this server's, and stock
+exllamav3 servers (TabbyAPI) serve a different one.
+
+Checked against the source at `299eeaf3` and live captures from it
+(`../testdata/README.md`). The adapter does not need `stats.gone`: 299eeaf3
+adds it after the first client hang-up, and `32419261` does not have it. `/health` names no model:
+discovery reads `/v1/models`, and a pin with `served_model` makes the adapter
+read `/v1/models` each collection and require that name.
+
+**The main line is not supported.** From `d982916`, the server adds mixed
+steps that prefill and decode together, and counts their tokens into
+`stats.mix_pre_tok` and `stats.mix_tok` (lines 458 and 662-664 there), not
+into `pre_tok` and `dec_tok`. This mapping would lose those tokens without a
+sign, so the adapter refuses any `/health` with a `mix_*` key: a pin reads as
+down and discovery reports `unsupported`. Its `/v1/models` also has no
+`max_model_len`, so discovery does not read its `/health` at all.
+
+One scheduler thread (lines 557-644) runs prefill chunks and decode steps in
+turn. The counters update after each chunk or step.
+
+| canonical | source (`i2_server.py` at `299eeaf3`) | clock | updates |
+|---|---|---|---|
+| `llme_tokens_total{phase="prefill"}` | `stats.pre_tok`: prompt tokens each prefill chunk computed (line 587). A restored prefix starts the prefill at the restore point (line 522), so cache hits are not in it | — | iteration |
+| `llme_tokens_total{phase="decode"}` | `stats.dec_tok`: per decode step, accepted drafts plus one target token per active row (line 632) | — | iteration |
+| `llme_prompt_cached_tokens_total` | `stats.prefix_hit_tok`: prompt tokens restored from a prefix snapshot at admission (`i2_prefix_cache.py` line 116) | — | admission |
+| `llme_request_phase_seconds_total` | — (no per-request times) | | |
+| `llme_engine_phase_seconds_total` | — (see below) | | |
+| `llme_requests_total{status}` | — (no finish-reason counter) | | |
+| `llme_requests_running` | — (see below) | | |
+| `llme_kv_cache_usage_ratio` | — (see below) | | |
+| `llme_time_to_first_token_seconds` | — | | |
+| `llme_spec_*` | — (see below) | | |
+
+Notes:
+
+- **Decode tokens leave out each request's first token.** The last prefill
+  chunk samples it (line 596), outside the decode steps. They also include
+  tokens a step produced after a request finished in that step (a stop token
+  inside the accepted drafts, at most the draft length per request). Both are
+  small per request; compare decode token counts across engines with care.
+  The overshoot bound holds at `--burst 1` (the default); with `--burst N` it
+  can reach `N*(K+1)-1`. A forced end of thinking drops one step's tokens that
+  were already counted (lines 664-667), and at `32419261` (no client-gone
+  handling) an abandoned request decodes to `max_tokens` and is counted.
+- **No engine phase seconds.** `pre_time` (line 587) and `dec_time` (line 631)
+  time each chunk and step on the host. A prefill chunk that is not the last
+  returns without waiting for the GPU (lines 311-337), and the next broadcast
+  waits for it (`HDR.tolist()`, line 294). So prefill GPU time falls into the
+  next decode step's `dec_time`, and the split between phases is wrong when
+  they interleave.
+- **No running gauge.** `active` (line 744) counts requests that decode.
+  Admitted requests that still prefill are in `prefilling` (line 434), which
+  `/health` does not report. `queued` is requests not yet admitted.
+- **No KV-cache ratio.** `kv_tokens` is the pool size and `prefix.free_pages`
+  the free pages, but pages that kept prompts hold count as used
+  (`i2_prefix_cache.py` line 132); vLLM and SGLang count them as free.
+- **No speculative counters.** Nothing counts proposed drafts: the draft
+  length depends on the batch bucket (`--spec-k`, lines 54-58). `dec_tok -
+  dec_rows` is the accepted drafts exactly (a plain step accepts none, line
+  232), but the schema does not derive counters by subtraction, and without
+  drafts there is no acceptance rate. `spec_steps` counts batch steps, not
+  steps per request.
+- **No canonical series** for `dec_steps`, `dec_rows`, `plain_steps`,
+  `idle_time` (never updated), `prefix_lookups`, `prefix_hits`,
+  `prefix_snapshots`, `prefix_evictions`, `gone` (client hang-ups; the key
+  appears after the first one), `trims`, `trim_ms_*`, `spec` or `kv_tokens`.
+- The upstream change that would fill most rows: add `len(prefilling)`,
+  finish-reason counters, a drafted-token counter and a GPU sync before the
+  `pre_time` stop.
 
 ## Not yet built
 

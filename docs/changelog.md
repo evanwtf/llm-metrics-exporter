@@ -3,6 +3,17 @@
 Each release's notes are its section here. The publish workflow uses the
 section as the notes and refuses a version without one.
 
+## Unreleased
+
+- Inkling 2 adapter (`inkling2-exl3`) for the inkling2-exl3 server, which
+  serves no `/metrics`. The adapter reads its JSON `/health`: prefill
+  (computed), decode and cached prompt tokens. Discovery reads `/health` only
+  when `/metrics` answers with an error status and `/v1/models` has this
+  server's shape (`owned_by: "local"`, a numeric `max_model_len`), so other
+  engines never get a `/health` read. Server versions with mixed steps
+  (`mix_*` counters) are refused. Every other series stays unavailable; `docs/adapters.md` says
+  why. Fixtures are live captures from the server at `299eeaf3`.
+
 ## 0.1.0 (2026-10-06)
 
 - TensorFold v0.6's own `/metrics` (the MiaAI-Lab GLM recipe): discovery

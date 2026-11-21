@@ -219,6 +219,18 @@ func (m *Manager) probe(parent context.Context, t Target) Observation {
 	o := Observation{Registration: registration.Registration{Version: 1, Endpoint: t.URL, Engine: metrics.Unknown, Model: metrics.Unknown, Backend: fmt.Sprintf("auto-%x", hash[:8]), RunID: "auto", Nodes: m.opts.Nodes}, generation: t.Generation, State: "unavailable"}
 	f, err := adapter.FetchMetrics(ctx, m.client, t.URL, m.opts.MaxBody)
 	if err != nil {
+		// A server that answers /metrics with an error status may still be an
+		// engine whose telemetry is a JSON /health (Inkling 2). /v1/models
+		// decides first: no other engine is sent GET /health, which on
+		// SGLang runs a generation.
+		var status *adapter.StatusError
+		if errors.As(err, &status) {
+			if body, e := m.modelsBody(ctx, t.URL); e == nil {
+				if before, ok := engines.HealthCandidate(body); ok {
+					return m.probeHealth(ctx, t.URL, o, before)
+				}
+			}
+		}
 		o.Err = errors.New("telemetry request failed")
 		return o
 	}
@@ -267,7 +279,7 @@ func (m *Manager) probe(parent context.Context, t Target) Observation {
 		}
 		model = before
 	}
-	if model == "" || len(model) > 512 || strings.ContainsAny(model, "\x00\r\n\t ") {
+	if !validModel(model) {
 		o.Err = errors.New("model identity missing or invalid")
 		o.State = "identity_missing"
 		return o
@@ -285,22 +297,75 @@ func (m *Manager) probe(parent context.Context, t Target) Observation {
 	return o
 }
 
-func (m *Manager) model(ctx context.Context, endpoint string) (string, error) {
+func validModel(model string) bool {
+	return model != "" && len(model) <= 512 && !strings.ContainsAny(model, "\x00\r\n\t ")
+}
+
+// probeHealth reads the JSON /health of a server whose /v1/models (read
+// before, giving the model) has the Inkling 2 shape, then reads /v1/models
+// again: both must name the same model. A failed /health request is
+// "unavailable" and keeps the last labels, as a failed /metrics does; a body
+// without the signature is "unknown"; mixed-step versions are "unsupported".
+func (m *Manager) probeHealth(ctx context.Context, endpoint string, o Observation, before string) Observation {
+	d, res, err := engines.DetectHealth(ctx, m.client, endpoint, m.opts.MaxBody)
+	switch {
+	case errors.Is(err, engines.ErrUnsupported):
+		o.Registration.Engine = d.Engine
+		o.Version = d.Version
+		o.Err = err
+		o.State = "unsupported"
+		return o
+	case errors.Is(err, engines.ErrUnknown):
+		o.Err = err
+		o.State = "unknown"
+		return o
+	case err != nil:
+		o.Err = errors.New("telemetry request failed")
+		return o
+	}
+	o.Registration.Engine = d.Engine
+	o.Version = d.Version
+	after, err := m.model(ctx, endpoint)
+	if err != nil || before != after {
+		o.Err = errors.New("model changed during identity lookup")
+		o.State = "ambiguous"
+		return o
+	}
+	if !validModel(before) {
+		o.Err = errors.New("model identity missing or invalid")
+		o.State = "identity_missing"
+		return o
+	}
+	o.Registration.Model = before
+	o.Result = res
+	o.State = "ready"
+	return o
+}
+
+func (m *Manager) modelsBody(ctx context.Context, endpoint string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint+"/v1/models", nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	r, err := m.client.Do(req)
 	if err != nil {
-		return "", errors.New("model metadata unavailable")
+		return nil, errors.New("model metadata unavailable")
 	}
 	defer r.Body.Close()
 	if r.StatusCode != http.StatusOK {
-		return "", errors.New("model metadata unavailable")
+		return nil, errors.New("model metadata unavailable")
 	}
 	body, err := io.ReadAll(io.LimitReader(r.Body, m.opts.MaxBody+1))
 	if err != nil || int64(len(body)) > m.opts.MaxBody {
-		return "", errors.New("invalid model metadata")
+		return nil, errors.New("invalid model metadata")
+	}
+	return body, nil
+}
+
+func (m *Manager) model(ctx context.Context, endpoint string) (string, error) {
+	body, err := m.modelsBody(ctx, endpoint)
+	if err != nil {
+		return "", err
 	}
 	var data struct {
 		Data []struct {
